@@ -141,21 +141,30 @@ app.post('/api/fetch-news', async (req, res) => {
     const fromDateString = fromDate.toISOString().split('T')[0];
     
     for (const query of searchQueries) {
-      const response = await axios.get('https://newsapi.org/v2/everything', {
-        params: {
-          q: query,
-          from: fromDateString,
-          sortBy: 'publishedAt',
-          language: 'en',
-          apiKey: NEWS_API_KEY,
-          pageSize: 100, // Get more results for year-long fetch
-        },
-      });
+      try {
+        const response = await axios.get('https://newsapi.org/v2/everything', {
+          params: {
+            q: query,
+            from: fromDateString,
+            sortBy: 'publishedAt',
+            language: 'en',
+            apiKey: NEWS_API_KEY,
+            pageSize: 100,
+          },
+          timeout: 10000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0'
+          }
+        });
       
       if (response.data.articles) {
         newIncidents.push(
           ...response.data.articles.map(article => parseIncident(article))
         );
+      }
+      } catch (queryError) {
+        console.error(`Error with query "${query}":`, queryError.message);
+        continue;
       }
     }
     
