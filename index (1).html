@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antisemitic Incidents Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a472a;
+            --primary-light: #2d6b47;
+            --accent: #d4a574;
+            --accent-dark: #b8905f;
+            --bg-dark: #0f2818;
+            --bg-light: #f5f3f0;
+            --text-dark: #1a1a1a;
+            --text-light: #f5f3f0;
+            --border: #e0dbd5;
+            --verified: #2ecc71;
+            --pending: #f39c12;
+            --disputed: #e74c3c;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: var(--text-light);
+            padding: 3rem 2rem;
+            border-bottom: 4px solid var(--accent);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button, select, input {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button {
+            background: var(--primary);
+            color: var(--text-light);
+            border: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        select {
+            background: white;
+            color: var(--text-dark);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 4px;
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+        }
+
+        .incidents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .incident-card {
+            background: white;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-top: 3px solid var(--accent);
+        }
+
+        .incident-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .incident-image {
+            width: 100%;
+            height: 180px;
+            background: var(--bg-dark);
+            object-fit: cover;
+        }
+
+        .incident-image:not([src]), .incident-image[src=""] {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .incident-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .incident-header {
+            margin-bottom: 1rem;
+        }
+
+        .incident-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .incident-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #666;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .incident-date, .incident-location {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .incident-description {
+            font-size: 0.95rem;
+            color: #555;
+            margin-bottom: 1rem;
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        .incident-status {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .status-verified {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: var(--verified);
+        }
+
+        .status-pending {
+            background-color: rgba(243, 156, 18, 0.1);
+            color: var(--pending);
+        }
+
+        .status-disputed {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--disputed);
+        }
+
+        .incident-footer {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .incident-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .incident-link:hover {
+            color: var(--accent);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button, select {
+                width: 100%;
+            }
+
+            .incidents-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+
+        .error {
+            background-color: #ffe0e0;
+            color: #c00;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .success {
+            background-color: #e0ffe0;
+            color: #060;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Antisemitic Incidents Tracker</h1>
+            <p class="subtitle">Monitoring and documenting antisemitic acts in the United States</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="message"></div>
+
+        <div class="controls">
+            <button onclick="fetchLatestNews()">🔄 Fetch Latest News</button>
+            <select id="statusFilter" onchange="filterIncidents()">
+                <option value="">All Statuses</option>
+                <option value="pending_review">Pending Review</option>
+                <option value="verified">Verified</option>
+                <option value="disputed">Disputed</option>
+            </select>
+            <select id="locationFilter" onchange="filterIncidents()">
+                <option value="All">All Locations</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="Search incidents..." onkeyup="filterIncidents()">
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Total Incidents</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="verifiedCount">0</div>
+                <div class="stat-label">Verified</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingCount">0</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="disputedCount">0</div>
+                <div class="stat-label">Disputed</div>
+            </div>
+        </div>
+
+        <div class="incidents-grid" id="incidentsGrid">
+            <div class="loading">Loading incidents...</div>
+        </div>
+    </div>
+
+    <script>
+        let allIncidents = [];
+
+        async function loadIncidents() {
+            try {
+                const response = await fetch('/api/incidents');
+                allIncidents = await response.json();
+                renderIncidents(allIncidents);
+                updateStats();
+                populateLocationFilter();
+            } catch (error) {
+                showMessage('Error loading incidents: ' + error.message, 'error');
+            }
+        }
+
+        async function fetchLatestNews() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Fetching...';
+
+            try {
+                const response = await fetch('/api/fetch-news', { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`✓ Added ${data.newIncidentsAdded} new incidents (${data.totalIncidents} total)`, 'success');
+                    loadIncidents();
+                } else {
+                    showMessage('Error: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Error fetching news: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Fetch Latest News';
+            }
+        }
+
+        function renderIncidents(incidents) {
+            const grid = document.getElementById('incidentsGrid');
+            
+            if (incidents.length === 0) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h3>No incidents found</h3><p>Click "Fetch Latest News" to load incident data from news sources.</p></div>';
+                return;
+            }
+
+            grid.innerHTML = incidents.map(incident => `
+                <div class="incident-card">
+                    ${incident.imageUrl ? `<img src="${incident.imageUrl}" alt="" class="incident-image" onerror="this.style.display='none'">` : ''}
+                    <div class="incident-content">
+                        <div class="incident-header">
+                            <div class="incident-title">${escapeHtml(incident.title)}</div>
+                            <div class="incident-meta">
+                                <div class="incident-date">📅 ${formatDate(incident.date)}</div>
+                                <div class="incident-location">📍 ${escapeHtml(incident.location)}</div>
+                            </div>
+                            <div class="incident-status status-${incident.status}">
+                                ${incident.status.replace(/_/g, ' ')}
+                            </div>
+                        </div>
+                        <div class="incident-description">
+                            ${escapeHtml(incident.description.substring(0, 150))}${incident.description.length > 150 ? '...' : ''}
+                        </div>
+                        <div class="incident-footer">
+                            <a href="${incident.url}" target="_blank" class="incident-link">Read Full Article →</a>
+                            <span style="font-size: 0.85rem; color: #999;">via ${escapeHtml(incident.source)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterIncidents() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const locationFilter = document.getElementById('locationFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = allIncidents.filter(incident => {
+                const matchStatus = !statusFilter || incident.status === statusFilter;
+                const matchLocation = locationFilter === 'All' || incident.location === locationFilter;
+                const matchSearch = !searchTerm || 
+                    incident.title.toLowerCase().includes(searchTerm) ||
+                    incident.description.toLowerCase().includes(searchTerm);
+                
+                return matchStatus && matchLocation && matchSearch;
+            });
+
+            renderIncidents(filtered);
+        }
+
+        function populateLocationFilter() {
+            const locations = [...new Set(allIncidents.map(i => i.location))].sort();
+            const select = document.getElementById('locationFilter');
+            const currentValue = select.value;
+            
+            select.innerHTML = '<option value="All">All Locations</option>' + 
+                locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
+            
+            select.value = currentValue;
+        }
+
+        function updateStats() {
+            const stats = {
+                total: allIncidents.length,
+                verified: allIncidents.filter(i => i.status === 'verified').length,
+                pending: allIncidents.filter(i => i.status === 'pending_review').length,
+                disputed: allIncidents.filter(i => i.status === 'disputed').length,
+            };
+
+            document.getElementById('totalCount').textContent = stats.total;
+            document.getElementById('verifiedCount').textContent = stats.verified;
+            document.getElementById('pendingCount').textContent = stats.pending;
+            document.getElementById('disputedCount').textContent = stats.disputed;
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showMessage(message, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.className = type;
+            messageEl.textContent = message;
+            messageEl.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 4000);
+            }
+        }
+
+        // Load incidents on page load
+        loadIncidents();
+    </script>
+</body>
+</html>
