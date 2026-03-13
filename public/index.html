@@ -515,6 +515,7 @@
 
         <div class="controls">
             <button onclick="fetchLatestNews()">🔄 Fetch Latest News</button>
+            <button onclick="fetchLastYear()" style="background: #e74c3c;">📅 Fetch Last Year</button>
             <button class="toggle-stats" onclick="toggleStats()">📊 View Statistics</button>
             <select id="statusFilter" onchange="filterIncidents()">
                 <option value="">All Statuses</option>
@@ -551,10 +552,36 @@
             <div class="chart-section">
                 <h2>📈 Statistics & Trends</h2>
                 
+                <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">📅 Annual Statistics (Last 12 Months)</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                        <div style="background: #fafaf8; padding: 1rem; border-radius: 4px; border-left: 4px solid #3498db;">
+                            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">Year-to-Date</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #3498db;" id="annualTotal">0</div>
+                        </div>
+                        <div style="background: #fafaf8; padding: 1rem; border-radius: 4px; border-left: 4px solid #2ecc71;">
+                            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">Verified</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #2ecc71;" id="annualVerified">0</div>
+                        </div>
+                        <div style="background: #fafaf8; padding: 1rem; border-radius: 4px; border-left: 4px solid #f39c12;">
+                            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">Avg Per Month</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #f39c12;" id="avgPerMonth">0</div>
+                        </div>
+                        <div style="background: #fafaf8; padding: 1rem; border-radius: 4px; border-left: 4px solid #e74c3c;">
+                            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">Most Active Month</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #e74c3c;" id="mostActiveMonth">-</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="charts-grid">
                     <div class="chart-container">
                         <div class="chart-title">Incidents by Status</div>
                         <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Incidents by Month (Last Year)</div>
+                        <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
 
@@ -639,6 +666,29 @@
             }
         }
 
+        async function fetchLastYear() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Fetching Full Year...';
+
+            try {
+                const response = await fetch('/api/fetch-news?timeframe=year', { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`✓ Added ${data.newIncidentsAdded} new incidents from the last year (${data.totalIncidents} total)`, 'success');
+                    loadIncidents();
+                } else {
+                    showMessage('Error: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Error fetching last year data: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📅 Fetch Last Year';
+            }
+        }
+
         function toggleStats() {
             const panel = document.getElementById('statsPanel');
             panel.classList.toggle('active');
@@ -656,7 +706,9 @@
 
         function updateCharts() {
             updateStatusChart();
+            updateMonthlyChart();
             updateKeyMetrics();
+            updateAnnualStats();
             updatePerpetrators();
             updateGeneralIncidents();
         }
@@ -701,6 +753,104 @@
                     }
                 }
             });
+        }
+
+        let monthlyChart = null;
+
+        function updateMonthlyChart() {
+            const ctx = document.getElementById('monthlyChart');
+            if (!ctx) return;
+
+            // Get incidents from last 12 months
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+            const monthlyData = {};
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            // Initialize all months with 0
+            for (let i = 0; i < 12; i++) {
+                monthlyData[i] = 0;
+            }
+
+            // Count incidents by month
+            allIncidents.forEach(incident => {
+                const date = new Date(incident.date);
+                if (date >= oneYearAgo) {
+                    const month = date.getMonth();
+                    monthlyData[month]++;
+                }
+            });
+
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+
+            monthlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Incidents',
+                        data: Object.values(monthlyData),
+                        backgroundColor: '#1a472a',
+                        borderColor: '#2d6b47',
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: { family: "'Georgia', serif", size: 13 },
+                                color: '#333',
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAnnualStats() {
+            // Get incidents from last 12 months
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+            const yearIncidents = allIncidents.filter(i => new Date(i.date) >= oneYearAgo);
+            
+            const annualTotal = yearIncidents.length;
+            const annualVerified = yearIncidents.filter(i => i.status === 'verified').length;
+            
+            // Calculate average per month
+            const avgPerMonth = (annualTotal / 12).toFixed(1);
+
+            // Find most active month
+            const monthlyCount = {};
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            yearIncidents.forEach(incident => {
+                const date = new Date(incident.date);
+                const month = monthNames[date.getMonth()];
+                monthlyCount[month] = (monthlyCount[month] || 0) + 1;
+            });
+
+            const mostActiveMonth = Object.entries(monthlyCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+            document.getElementById('annualTotal').textContent = annualTotal;
+            document.getElementById('annualVerified').textContent = annualVerified;
+            document.getElementById('avgPerMonth').textContent = avgPerMonth;
+            document.getElementById('mostActiveMonth').textContent = mostActiveMonth;
         }
 
         function updateKeyMetrics() {
