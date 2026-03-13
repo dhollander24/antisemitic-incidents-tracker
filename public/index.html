@@ -6,417 +6,285 @@
     <title>Antisemitic Incidents Tracker</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #1a472a;
-            --accent: #d4a574;
-            --bg-light: #f5f3f0;
-            --text-dark: #1a1a1a;
-        }
-        body { font-family: 'Georgia', serif; background: var(--bg-light); color: var(--text-dark); }
-        header { background: linear-gradient(135deg, var(--primary) 0%, #2d6b47 100%); color: white; padding: 2rem; border-bottom: 4px solid var(--accent); }
+        :root { --primary: #1a472a; --accent: #d4a574; --bg: #f5f3f0; }
+        body { font-family: Georgia, serif; background: var(--bg); color: #333; line-height: 1.6; }
+        header { background: linear-gradient(135deg, var(--primary), #2d6b47); color: white; padding: 2rem; border-bottom: 4px solid var(--accent); }
         h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-        .subtitle { opacity: 0.9; }
-        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
-        .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+        .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 2rem 0; }
+        .nav button { padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .nav button.active { background: var(--accent); color: var(--primary); }
+        .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
         button, select, input { padding: 0.75rem 1.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: Georgia; cursor: pointer; }
         button { background: var(--primary); color: white; border: none; font-weight: 600; }
         button:hover { background: #2d6b47; }
-        button.active { background: var(--accent); color: var(--primary); }
-        .nav-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
-        .nav-btn { padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
-        .nav-btn.active { background: var(--accent); color: var(--primary); }
+        button.red { background: #e74c3c; }
         .page { display: none; }
-        .page.active { display: block; }
-        .stat-card { background: white; padding: 1.5rem; border-left: 4px solid var(--accent); border-radius: 4px; margin-bottom: 1rem; }
-        .stat-number { font-size: 2.5rem; font-weight: 700; color: var(--primary); }
-        .stat-label { font-size: 0.9rem; color: #666; text-transform: uppercase; }
-        .incident-card { background: white; padding: 1.5rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid var(--accent); }
-        .incident-title { font-size: 1.1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem; }
-        .incident-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; }
-        .incident-status { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 3px; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; }
-        .status-verified { background: rgba(46,204,113,0.1); color: #2ecc71; }
-        .status-pending { background: rgba(243,156,18,0.1); color: #f39c12; }
-        .status-disputed { background: rgba(231,76,60,0.1); color: #e74c3c; }
+        .page.show { display: block; }
+        .card { background: white; padding: 1.5rem; margin: 1rem 0; border-radius: 4px; border-left: 4px solid var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .meta { font-size: 0.9rem; color: #666; margin-bottom: 0.5rem; }
+        .status { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 3px; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .status-verified { background: rgba(46,204,113,0.1); color: #27ae60; }
+        .status-pending { background: rgba(243,156,18,0.1); color: #d68910; }
+        .status-disputed { background: rgba(231,76,60,0.1); color: #c0392b; }
+        a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        a:hover { color: #2d6b47; }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
-        .modal.active { display: block; }
-        .modal-content { background: var(--bg-light); margin: 2rem auto; padding: 0; width: 90%; max-width: 900px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .modal-header { background: linear-gradient(135deg, var(--primary) 0%, #2d6b47 100%); color: white; padding: 2rem; }
+        .modal.show { display: block; }
+        .modal-content { background: var(--bg); margin: 2rem auto; width: 90%; max-width: 900px; border-radius: 4px; }
+        .modal-header { background: linear-gradient(135deg, var(--primary), #2d6b47); color: white; padding: 2rem; display: flex; justify-content: space-between; align-items: center; }
         .modal-header h2 { margin: 0; }
-        .close-modal { float: right; font-size: 2rem; font-weight: bold; cursor: pointer; }
+        .close { font-size: 2rem; cursor: pointer; }
         .modal-body { padding: 2rem; }
-        .mission-section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #ddd; }
-        .mission-section:last-child { border: none; }
-        .mission-section h3 { color: var(--primary); margin-bottom: 1rem; }
-        .perpetrator-item { background: white; padding: 1.5rem; margin-bottom: 1rem; border-radius: 4px; border-left: 4px solid #e74c3c; }
-        .perpetrator-name { font-size: 1.2rem; font-weight: 700; color: #c0392b; margin-bottom: 0.5rem; }
-        .empty-state { text-align: center; padding: 2rem; color: #999; background: #fafaf8; border-radius: 4px; }
+        .section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #ddd; }
+        .section:last-child { border: none; }
+        .section h3 { color: var(--primary); margin-bottom: 1rem; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .stat { background: white; padding: 1rem; border-radius: 4px; border-left: 4px solid var(--accent); text-align: center; }
+        .stat-number { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 0.8rem; color: #999; text-transform: uppercase; }
+        .empty { text-align: center; padding: 2rem; color: #999; background: #fafaf8; border-radius: 4px; }
+        .msg { padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        .msg-error { background: #ffe0e0; color: #c00; }
+        .msg-success { background: #e0ffe0; color: #060; }
         footer { background: #f5f3f0; border-top: 2px solid var(--accent); padding: 2rem; margin-top: 3rem; text-align: center; font-size: 0.9rem; color: #666; }
-        @media (max-width: 768px) { .controls { flex-direction: column; } button, select { width: 100%; } }
+        @media (max-width: 768px) { .controls { flex-direction: column; } button, select, input { width: 100%; } }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
             <h1>Antisemitic Incidents Tracker</h1>
-            <p class="subtitle">Monitoring and documenting antisemitic acts in the United States</p>
+            <p>Monitoring and documenting antisemitic acts in the United States</p>
         </div>
     </header>
 
     <div class="container">
-        <div id="message" style="margin-bottom: 1rem;"></div>
+        <div id="msg"></div>
 
-        <div class="nav-buttons">
-            <button class="nav-btn active" onclick="switchPage('home')">Home</button>
-            <button class="nav-btn" onclick="switchPage('todays-news')">Today's News</button>
-            <button class="nav-btn" onclick="switchPage('perpetrators')">Perpetrators</button>
-            <button class="nav-btn" onclick="showMission()">Mission Statement</button>
+        <div class="nav">
+            <button class="active" onclick="showPage('home')">Home</button>
+            <button onclick="showPage('today')">Today's News</button>
+            <button onclick="showPage('perpetrators')">Perpetrators</button>
+            <button onclick="showPage('mission')">Mission</button>
         </div>
 
-        <!-- Mission Modal -->
-        <div id="missionModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <span class="close-modal" onclick="closeMission()">&times;</span>
-                    <h2>Mission Statement</h2>
-                </div>
-                <div class="modal-body">
-                    <div class="mission-section">
-                        <h3>About Me</h3>
-                        <p>My name is Delilah Hollander. I created this tracker out of a personal need to understand and document the rising tide of antisemitic incidents happening across America. Over the past few years, I've watched the numbers climb, and the impact has been profound - both on our communities and on me personally.</p>
-                    </div>
-                    <div class="mission-section">
-                        <h3>Why I Built This</h3>
-                        <p>I saw antisemitism becoming increasingly visible and violent. News stories about hate crimes, harassment, and discrimination against Jewish people seemed to multiply daily. I realized there wasn't a centralized, accessible place to track and understand the scope of what was happening. So I decided to build one.</p>
-                    </div>
-                    <div class="mission-section">
-                        <h3>What This Tracker Does</h3>
-                        <p>This tracker aggregates news reports of antisemitic incidents from across the United States - physical assaults, harassment, vandalism, threats, and discrimination. By documenting these incidents and identifying perpetrators, I hope to provide visibility into a problem that affects millions of Jewish Americans every day.</p>
-                    </div>
-                    <div class="mission-section">
-                        <h3>My Commitment</h3>
-                        <p>I am committed to accuracy, transparency, and lifting up the voices of those affected by antisemitism. This tracker is my way of saying: we see what's happening, we're documenting it, and we refuse to let these incidents fade into silence. If you've been affected by antisemitism, or if you see incidents that should be documented, please help me keep this database current and accurate.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Home Page -->
-        <div id="home" class="page active">
+        <!-- HOME PAGE -->
+        <div id="home" class="page show">
             <div class="controls">
-                <button onclick="loadIncidents()">Load Stored Data</button>
-                <button onclick="fetchLatestNews()">Fetch Latest News</button>
-                <button onclick="fetchLastYear()" style="background: #e74c3c;">Fetch Last Year</button>
-                <button onclick="toggleStats()">View Statistics</button>
-                <select id="statusFilter" onchange="filterIncidents()">
-                    <option value="">All Statuses</option>
-                    <option value="pending_review">Pending Review</option>
+                <button onclick="loadData()">Load Data</button>
+                <button onclick="fetchNews()">Fetch Latest News</button>
+                <button class="red" onclick="fetchYear()">Fetch Last Year</button>
+                <button onclick="showStats()">Statistics</button>
+                <select id="filter" onchange="applyFilter()">
+                    <option value="">All Status</option>
                     <option value="verified">Verified</option>
+                    <option value="pending_review">Pending</option>
                     <option value="disputed">Disputed</option>
                 </select>
-                <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterIncidents()">
+                <input type="text" id="search" placeholder="Search..." onkeyup="applyFilter()">
             </div>
 
-            <div id="statsContainer" style="display: none; margin-bottom: 2rem; background: white; padding: 2rem; border-radius: 4px;"></div>
+            <div id="stats" style="display:none;">
+                <h2>Statistics by Year & Type</h2>
+                <div id="statsContent"></div>
+            </div>
 
-            <div id="incidentsGrid"></div>
+            <div id="incidents"></div>
         </div>
 
-        <!-- Today's News Page -->
-        <div id="todays-news" class="page">
-            <h2>Today's News</h2>
-            <button onclick="loadTodaysNews()" style="margin-bottom: 1rem;">Load Today's Incidents</button>
-            <div id="todaysNewsGrid"></div>
+        <!-- TODAY PAGE -->
+        <div id="today" class="page">
+            <h2>Today's Incidents</h2>
+            <button onclick="loadTodayData()">Load Today's News</button>
+            <div id="todayIncidents"></div>
         </div>
 
-        <!-- Perpetrators Page -->
+        <!-- PERPETRATORS PAGE -->
         <div id="perpetrators" class="page">
             <h2>Perpetrators Database</h2>
-            <p style="margin-bottom: 1rem; color: #666;">Individuals cited in news as committing antisemitic acts.</p>
-            <input type="text" id="perpetratorSearch" placeholder="Search by name..." onkeyup="filterPerpList()" style="margin-bottom: 1rem; width: 100%; max-width: 400px;">
-            <div id="perpetratorsList"></div>
+            <p>Individuals cited in news reports as committing antisemitic acts.</p>
+            <input type="text" id="perpSearch" placeholder="Search by name..." onkeyup="filterPerps()" style="width:100%; max-width:400px; padding:0.75rem; margin:1rem 0; border:1px solid #ddd; border-radius:4px;">
+            <div id="perpList"></div>
+        </div>
+
+        <!-- MISSION PAGE -->
+        <div id="mission" class="page">
+            <div class="card">
+                <h2>Mission Statement</h2>
+                
+                <div class="section">
+                    <h3>About Me</h3>
+                    <p>My name is Delilah Hollander. I created this tracker out of a personal need to understand and document the rising tide of antisemitic incidents happening across America. Over the past few years, I've watched the numbers climb, and the impact has been profound - both on our communities and on me personally.</p>
+                </div>
+
+                <div class="section">
+                    <h3>Why I Built This</h3>
+                    <p>I saw antisemitism becoming increasingly visible and violent. News stories about hate crimes, harassment, and discrimination against Jewish people seemed to multiply daily. I realized there wasn't a centralized, accessible place to track and understand the scope of what was happening. So I decided to build one.</p>
+                </div>
+
+                <div class="section">
+                    <h3>What This Tracker Does</h3>
+                    <p>This tracker aggregates news reports of antisemitic incidents from across the United States - physical assaults, harassment, vandalism, threats, and discrimination. By documenting these incidents and identifying perpetrators, I hope to provide visibility into a problem that affects millions of Jewish Americans every day.</p>
+                </div>
+
+                <div class="section">
+                    <h3>My Commitment</h3>
+                    <p>I am committed to accuracy, transparency, and lifting up the voices of those affected by antisemitism. This tracker is my way of saying: we see what's happening, we're documenting it, and we refuse to let these incidents fade into silence. If you've been affected by antisemitism, or if you see incidents that should be documented, please help me keep this database current and accurate.</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <footer>
-        <p style="margin: 0 0 0.5rem 0;">Antisemitic Incidents Tracker</p>
-        <p style="margin: 0;">Created by Delilah Hollander</p>
-        <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem;">&copy; 2026 All rights reserved.</p>
+        <p>Antisemitic Incidents Tracker</p>
+        <p>Created by Delilah Hollander</p>
+        <p style="font-size:0.8rem; margin-top:0.5rem;">&copy; 2026 All rights reserved.</p>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-        let allIncidents = [];
+        let allData = [];
 
-        async function loadIncidents() {
+        function showMsg(text, type) {
+            const el = document.getElementById('msg');
+            el.className = 'msg ' + (type === 'error' ? 'msg-error' : 'msg-success');
+            el.textContent = text;
+            setTimeout(() => el.textContent = '', 4000);
+        }
+
+        async function loadData() {
             try {
-                const response = await fetch('/api/incidents');
-                allIncidents = await response.json();
-                renderIncidents(allIncidents);
-                updateStats();
-            } catch (error) {
-                showMessage('Error loading incidents: ' + error.message, 'error');
+                const res = await fetch('/api/incidents');
+                allData = await res.json();
+                renderIncidents(allData);
+                showMsg('Data loaded: ' + allData.length + ' incidents', 'success');
+            } catch (e) {
+                showMsg('Error loading data: ' + e.message, 'error');
             }
         }
 
-        async function fetchLatestNews() {
+        async function fetchNews() {
             const btn = event.target;
             btn.disabled = true;
-            const originalText = btn.textContent;
             btn.textContent = 'Fetching...';
-            
             try {
-                const response = await fetch('/api/fetch-news', { method: 'POST' });
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showMessage('Added ' + data.newIncidentsAdded + ' new incidents. Total: ' + data.totalIncidents, 'success');
-                    await loadIncidents();
+                const res = await fetch('/api/fetch-news', { method: 'POST' });
+                const json = await res.json();
+                if (res.ok) {
+                    showMsg('Added ' + json.newIncidentsAdded + ' new incidents', 'success');
+                    await loadData();
                 } else {
-                    showMessage('Error: ' + (data.error || 'Unknown error'), 'error');
+                    showMsg('Error: ' + json.error, 'error');
                 }
-            } catch (error) {
-                showMessage('Error fetching news: ' + error.message, 'error');
-                console.error('Fetch error:', error);
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = originalText;
+                btn.textContent = 'Fetch Latest News';
             }
         }
 
-        async function fetchLastYear() {
+        async function fetchYear() {
             const btn = event.target;
             btn.disabled = true;
-            const originalText = btn.textContent;
             btn.textContent = 'Fetching...';
-            
             try {
-                const response = await fetch('/api/fetch-news?timeframe=year', { method: 'POST' });
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showMessage('Added ' + data.newIncidentsAdded + ' incidents from last year. Total: ' + data.totalIncidents, 'success');
-                    await loadIncidents();
+                const res = await fetch('/api/fetch-news?timeframe=year', { method: 'POST' });
+                const json = await res.json();
+                if (res.ok) {
+                    showMsg('Added ' + json.newIncidentsAdded + ' incidents from last year', 'success');
+                    await loadData();
                 } else {
-                    showMessage('Error: ' + (data.error || 'Unknown error'), 'error');
+                    showMsg('Error: ' + json.error, 'error');
                 }
-            } catch (error) {
-                showMessage('Error fetching year data: ' + error.message, 'error');
-                console.error('Fetch error:', error);
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = originalText;
+                btn.textContent = 'Fetch Last Year';
             }
         }
 
-        function toggleStats() {
-            const container = document.getElementById('statsContainer');
-            container.style.display = container.style.display === 'none' ? 'block' : 'none';
-            if (container.style.display !== 'none') {
-                updateStats();
-            }
-        }
-
-        function updateStats() {
-            // Group by year
-            const yearStats = {};
-            
-            allIncidents.forEach(incident => {
-                const year = new Date(incident.date).getFullYear();
-                if (!yearStats[year]) {
-                    yearStats[year] = {
-                        'Physical Assault': 0,
-                        'Harassment': 0,
-                        'Graffiti/Vandalism': 0,
-                        'Threat': 0,
-                        'Discrimination': 0,
-                        'Other': 0
-                    };
-                }
-                
-                // Categorize by incident type
-                const title = incident.title.toLowerCase();
-                const desc = incident.description.toLowerCase();
-                const text = title + ' ' + desc;
-                
-                if (text.includes('assault') || text.includes('attack') || text.includes('beaten') || text.includes('shooter')) {
-                    yearStats[year]['Physical Assault']++;
-                } else if (text.includes('harass')) {
-                    yearStats[year]['Harassment']++;
-                } else if (text.includes('graffiti') || text.includes('vandal') || text.includes('defaced') || text.includes('spray')) {
-                    yearStats[year]['Graffiti/Vandalism']++;
-                } else if (text.includes('threat') || text.includes('threaten')) {
-                    yearStats[year]['Threat']++;
-                } else if (text.includes('discriminat') || text.includes('bias')) {
-                    yearStats[year]['Discrimination']++;
-                } else {
-                    yearStats[year]['Other']++;
-                }
-            });
-            
-            // Display stats by year
-            let statsHTML = '';
-            Object.keys(yearStats).sort((a, b) => b - a).forEach(year => {
-                const yearData = yearStats[year];
-                const yearTotal = Object.values(yearData).reduce((a, b) => a + b, 0);
-                
-                statsHTML += `
-                    <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 2px solid #ddd;">
-                        <h3 style="color: var(--primary); margin-bottom: 1rem;">${year} Statistics (${yearTotal} total incidents)</h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                            ${Object.entries(yearData).map(([type, count]) => `
-                                <div style="background: white; padding: 1rem; border-radius: 4px; border-left: 4px solid var(--accent);">
-                                    <div style="font-weight: 600; color: var(--primary); margin-bottom: 0.5rem;">${type}</div>
-                                    <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">${count}</div>
-                                    <div style="font-size: 0.8rem; color: #999;">
-                                        ${((count / yearTotal) * 100).toFixed(0)}% of incidents
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            document.getElementById('statsContainer').innerHTML = statsHTML;
-        }
-
-        function renderIncidents(incidents) {
-            const grid = document.getElementById('incidentsGrid');
-            if (incidents.length === 0) {
-                grid.innerHTML = '<div class="empty-state">No incidents. Click "Fetch Latest News" to load data.</div>';
+        function renderIncidents(data) {
+            if (data.length === 0) {
+                document.getElementById('incidents').innerHTML = '<div class="empty">No incidents. Click "Fetch Latest News" to load data.</div>';
                 return;
             }
-            grid.innerHTML = incidents.map(i => `
-                <div class="incident-card">
-                    <div class="incident-title">${esc(i.title)}</div>
-                    <div class="incident-meta">Date: ${formatDate(i.date)} | Location: ${esc(i.location)}</div>
-                    <div class="incident-status status-${i.status}">${i.status.replace(/_/g, ' ')}</div>
-                    <div style="font-size: 0.9rem; color: #555; margin: 0.5rem 0;">${esc(i.description.substring(0, 120))}...</div>
-                    <a href="${i.url}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600;">Read Article</a>
+            document.getElementById('incidents').innerHTML = data.map(i => `
+                <div class="card">
+                    <div class="title">${esc(i.title)}</div>
+                    <div class="meta">Date: ${fmt(i.date)} | Location: ${esc(i.location)} | Source: ${esc(i.source)}</div>
+                    <span class="status status-${i.status}">${i.status.replace(/_/g, ' ')}</span>
+                    <p>${esc(i.description.substring(0, 150))}...</p>
+                    <a href="${i.url}" target="_blank">Read Full Article</a>
                 </div>
             `).join('');
         }
 
-        function filterIncidents() {
-            const status = document.getElementById('statusFilter').value;
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = allIncidents.filter(i => 
-                (!status || i.status === status) && 
-                (i.title.toLowerCase().includes(search) || i.description.toLowerCase().includes(search))
-            );
+        function applyFilter() {
+            const status = document.getElementById('filter').value;
+            const search = document.getElementById('search').value.toLowerCase();
+            const filtered = allData.filter(i => {
+                const matchStatus = !status || i.status === status;
+                const matchSearch = !search || i.title.toLowerCase().includes(search) || i.description.toLowerCase().includes(search);
+                return matchStatus && matchSearch;
+            });
             renderIncidents(filtered);
         }
 
-        function loadTodaysNews() {
+        function loadTodayData() {
             const today = new Date().toISOString().split('T')[0];
-            const todaysIncidents = allIncidents.filter(i => i.date.split('T')[0] === today);
-            const grid = document.getElementById('todaysNewsGrid');
-            if (todaysIncidents.length === 0) {
-                grid.innerHTML = '<div class="empty-state">No incidents today.</div>';
+            const todayData = allData.filter(i => i.date.split('T')[0] === today);
+            if (todayData.length === 0) {
+                document.getElementById('todayIncidents').innerHTML = '<div class="empty">No incidents today.</div>';
                 return;
             }
-            grid.innerHTML = todaysIncidents.map(i => `
-                <div class="incident-card">
-                    <div class="incident-title">${esc(i.title)}</div>
-                    <div class="incident-meta">Location: ${esc(i.location)}</div>
-                    <div class="incident-status status-${i.status}">${i.status.replace(/_/g, ' ')}</div>
-                    <div style="font-size: 0.9rem; margin: 0.5rem 0;">${esc(i.description.substring(0, 150))}...</div>
-                    <a href="${i.url}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600;">Read Article</a>
+            document.getElementById('todayIncidents').innerHTML = todayData.map(i => `
+                <div class="card">
+                    <div class="title">${esc(i.title)}</div>
+                    <div class="meta">Location: ${esc(i.location)}</div>
+                    <span class="status status-${i.status}">${i.status.replace(/_/g, ' ')}</span>
+                    <p>${esc(i.description.substring(0, 150))}...</p>
+                    <a href="${i.url}" target="_blank">Read Article</a>
                 </div>
             `).join('');
         }
 
-        function loadPerpetrators() {
-            const perpetratorMap = {};
-            
-            // Keywords that indicate someone is the perpetrator
-            const actionPhrases = [
-                'arrested',
-                'charged with',
-                'charged by',
-                'accused of',
-                'suspected of',
-                'indicted',
-                'pleaded guilty',
-                'convicted',
-                'perpetrator',
-                'attacker',
-                'shooter',
-                'assaulted',
-                'threatened',
-                'vandalized',
-                'sprayed',
-                'attacked'
-            ];
-            
-            allIncidents.forEach(incident => {
-                const fullText = (incident.title + ' ' + incident.description);
-                
-                // For each action phrase, find the name that follows
-                actionPhrases.forEach(phrase => {
-                    // Create regex to find names near the action phrase
-                    const patterns = [
-                        new RegExp(`${phrase}\\s+(?:by\\s+)?([A-Z][a-z]+\\s+[A-Z][a-z]+)`, 'gi'),
-                        new RegExp(`([A-Z][a-z]+\\s+[A-Z][a-z]+)\\s+was\\s+(?:arrested|charged|accused)`, 'gi'),
-                        new RegExp(`suspect\\s+([A-Z][a-z]+\\s+[A-Z][a-z]+)`, 'gi'),
-                        new RegExp(`${phrase}\\s+([A-Z][a-z]+\\s+[A-Z][a-z]+)`, 'gi'),
-                    ];
-                    
-                    patterns.forEach(pattern => {
-                        let match;
-                        while ((match = pattern.exec(fullText)) !== null) {
-                            const name = match[1].trim();
-                            
-                            // Filter out common false positives
-                            const skip = ['Jewish', 'United States', 'New York', 'Los Angeles', 'San Francisco', 'Police Department'];
-                            const isSkip = skip.some(s => name.includes(s));
-                            
-                            if (!isSkip && name.length > 4) {
-                                if (!perpetratorMap[name]) {
-                                    perpetratorMap[name] = {
-                                        count: 0,
-                                        incidents: []
-                                    };
-                                }
-                                if (!perpetratorMap[name].incidents.find(inc => inc.id === incident.id)) {
-                                    perpetratorMap[name].incidents.push(incident);
-                                    perpetratorMap[name].count++;
-                                }
-                            }
+        function loadPerps() {
+            const map = {};
+            allData.forEach(i => {
+                const text = i.title + ' ' + i.description;
+                const patterns = [
+                    /(?:arrested|charged|accused|suspect|perpetrator)\s+(?:by\s+)?([A-Z][a-z]+\s+[A-Z][a-z]+)/gi,
+                    /([A-Z][a-z]+\s+[A-Z][a-z]+)\s+(?:was\s+)?arrested/gi,
+                ];
+                patterns.forEach(p => {
+                    let m;
+                    while ((m = p.exec(text)) !== null) {
+                        const name = m[1].trim();
+                        if (name.length > 4 && !name.includes('Police')) {
+                            if (!map[name]) map[name] = [];
+                            if (!map[name].find(x => x.id === i.id)) map[name].push(i);
                         }
-                    });
+                    }
                 });
             });
-            
-            // Sort by frequency
-            const sorted = Object.entries(perpetratorMap)
-                .map(([name, data]) => [name, data])
-                .sort((a, b) => b[1].count - a[1].count)
-                .filter(([_, data]) => data.count > 0);
-            
-            const container = document.getElementById('perpetratorsList');
+            const sorted = Object.entries(map).sort((a, b) => b[1].length - a[1].length);
             if (sorted.length === 0) {
-                container.innerHTML = '<div class="empty-state">No specific perpetrators found. As incidents are added with names of people charged or arrested, they will appear here.</div>';
+                document.getElementById('perpList').innerHTML = '<div class="empty">No perpetrators found yet.</div>';
                 return;
             }
-            
-            container.innerHTML = sorted.map(([name, data]) => `
-                <div class="perpetrator-item" data-name="${name.toLowerCase()}">
-                    <div class="perpetrator-name">${esc(name)}</div>
-                    <div style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">Cited in ${data.count} incident(s)</div>
-                    <div style="background: #fafaf8; padding: 1rem; border-radius: 3px;">
-                        <strong style="display: block; margin-bottom: 0.75rem;">Related news articles:</strong>
-                        ${data.incidents.slice(0, 3).map(inc => `
-                            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #ddd;">
-                                <a href="${inc.url}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600; display: block; margin-bottom: 0.3rem; word-break: break-word;">
-                                    ${esc(inc.title)}
-                                </a>
-                                <div style="color: #999; font-size: 0.8rem; margin-top: 0.3rem;">
-                                    ${formatDate(inc.date)} | ${esc(inc.location)} | ${esc(inc.source)}
-                                </div>
-                                <div style="color: #555; font-size: 0.85rem; margin-top: 0.3rem;">
-                                    ${esc(inc.description.substring(0, 100))}...
-                                </div>
+            document.getElementById('perpList').innerHTML = sorted.map(([name, incidents]) => `
+                <div class="card" data-name="${name.toLowerCase()}">
+                    <div class="title">${esc(name)}</div>
+                    <div class="meta">Cited in ${incidents.length} incident(s)</div>
+                    <div style="margin-top:1rem;">
+                        <strong>Related news articles:</strong>
+                        ${incidents.slice(0, 3).map(inc => `
+                            <div style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid #ddd;">
+                                <a href="${inc.url}" target="_blank">${esc(inc.title)}</a>
+                                <div style="font-size:0.85rem; color:#999; margin-top:0.25rem;">${fmt(inc.date)} | ${esc(inc.location)} | ${esc(inc.source)}</div>
                             </div>
                         `).join('')}
                     </div>
@@ -424,56 +292,55 @@
             `).join('');
         }
 
-        function filterPerpList() {
-            const search = document.getElementById('perpetratorSearch').value.toLowerCase();
-            document.querySelectorAll('.perpetrator-item').forEach(item => {
-                item.style.display = item.getAttribute('data-name').includes(search) ? 'block' : 'none';
+        function filterPerps() {
+            const search = document.getElementById('perpSearch').value.toLowerCase();
+            document.querySelectorAll('[data-name]').forEach(el => {
+                el.style.display = el.getAttribute('data-name').includes(search) ? 'block' : 'none';
             });
         }
 
-        function switchPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(page).classList.add('active');
+        function showStats() {
+            const stats = {};
+            allData.forEach(i => {
+                const yr = new Date(i.date).getFullYear();
+                if (!stats[yr]) stats[yr] = {
+                    'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0
+                };
+                const t = (i.title + ' ' + i.description).toLowerCase();
+                if (t.includes('assault') || t.includes('attack') || t.includes('shooter')) stats[yr]['Physical Assault']++;
+                else if (t.includes('harass')) stats[yr]['Harassment']++;
+                else if (t.includes('graffiti') || t.includes('vandal')) stats[yr]['Graffiti']++;
+                else if (t.includes('threat')) stats[yr]['Threat']++;
+                else stats[yr]['Other']++;
+            });
+            let html = '';
+            Object.keys(stats).sort((a, b) => b - a).forEach(yr => {
+                const total = Object.values(stats[yr]).reduce((a, b) => a + b);
+                html += `<div style="margin-bottom:2rem;"><h3>${yr} (${total} total)</h3><div class="stat-grid">` +
+                    Object.entries(stats[yr]).map(([type, count]) => `
+                        <div class="stat">
+                            <div style="font-weight:600; color:var(--primary); margin-bottom:0.5rem;">${type}</div>
+                            <div class="stat-number">${count}</div>
+                            <div class="stat-label">${((count/total)*100).toFixed(0)}%</div>
+                        </div>
+                    `).join('') + '</div></div>';
+            });
+            document.getElementById('statsContent').innerHTML = html;
+            document.getElementById('stats').style.display = 'block';
+        }
+
+        function showPage(p) {
+            document.querySelectorAll('.page').forEach(x => x.classList.remove('show'));
+            document.getElementById(p).classList.add('show');
+            document.querySelectorAll('.nav button').forEach(x => x.classList.remove('active'));
             event.target.classList.add('active');
-            
-            if (page === 'perpetrators') loadPerpetrators();
+            if (p === 'perpetrators') loadPerps();
         }
 
-        function showMission() {
-            document.getElementById('missionModal').classList.add('active');
-        }
+        function fmt(d) { return new Date(d).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}); }
+        function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-        function closeMission() {
-            document.getElementById('missionModal').classList.remove('active');
-        }
-
-        window.onclick = function(e) {
-            const modal = document.getElementById('missionModal');
-            if (e.target === modal) modal.classList.remove('active');
-        }
-
-        function showMessage(msg, type) {
-            const el = document.getElementById('message');
-            el.textContent = msg;
-            el.style.background = type === 'error' ? '#ffe0e0' : '#e0ffe0';
-            el.style.color = type === 'error' ? '#c00' : '#060';
-            el.style.padding = '1rem';
-            el.style.borderRadius = '4px';
-            if (type === 'success') setTimeout(() => el.textContent = '', 3000);
-        }
-
-        function formatDate(d) {
-            return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-        }
-
-        function esc(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        loadIncidents();
+        loadData();
     </script>
 </body>
 </html>
