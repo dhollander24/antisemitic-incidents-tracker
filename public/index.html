@@ -569,6 +569,152 @@
             font-size: 0.75rem;
             color: #999;
         }
+
+        .view-toggle {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .toggle-btn {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 71, 42, 0.2);
+        }
+
+        .toggle-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .perpetrator-card {
+            background: #fafaf8;
+            padding: 1.5rem;
+            border-radius: 4px;
+            border-left: 4px solid #e74c3c;
+            margin-bottom: 1.5rem;
+        }
+
+        .perpetrator-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .perpetrator-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #c0392b;
+        }
+
+        .perpetrator-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .perpetrator-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .perpetrator-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .perpetrator-stat-label {
+            font-size: 0.75rem;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .perpetrator-stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #c0392b;
+        }
+
+        .perpetrator-details {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .perpetrator-details strong {
+            color: var(--text-dark);
+        }
+
+        .perpetrator-incidents {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .perpetrator-incident-item {
+            font-size: 0.85rem;
+            color: #555;
+            padding: 0.5rem 0;
+            padding-left: 1rem;
+            border-left: 2px solid #e74c3c;
+            margin-bottom: 0.5rem;
+        }
+
+        .perpetrator-incident-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+
+        .perpetrator-incident-meta {
+            font-size: 0.75rem;
+            color: #999;
+        }
+
+        .no-perpetrators {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+            background: #fafaf8;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -654,8 +800,23 @@
                     <h3>📍 Location Breakdown</h3>
                     <div id="locationBreakdown" class="location-details"></div>
                 </div>
-            </div>
-        </div>
+
+                <div class="chart-section" style="margin-top: 2rem;">
+                    <h2>🚨 Perpetrator Tracking</h2>
+                    
+                    <div class="view-toggle">
+                        <button class="toggle-btn active" onclick="switchView('perpetrators')">👤 Specific Perpetrators</button>
+                        <button class="toggle-btn" onclick="switchView('general-incidents')">📰 General Incidents</button>
+                    </div>
+
+                    <div id="perpetratorsView" class="view-section active">
+                        <div id="perpetratorsList"></div>
+                    </div>
+
+                    <div id="generalIncidentsView" class="view-section">
+                        <div id="generalIncidentsList"></div>
+                    </div>
+                </div>
 
         <div class="incidents-grid" id="incidentsGrid">
             <div class="loading">Loading incidents...</div>
@@ -723,6 +884,8 @@
             updateTopLocations();
             updateKeyMetrics();
             updateLocationBreakdown();
+            updatePerpetrators();
+            updateGeneralIncidents();
         }
 
         function updateStatusChart() {
@@ -877,6 +1040,189 @@
             }).join('');
 
             document.getElementById('locationBreakdown').innerHTML = html || '<p style="color: #999;">No location data available</p>';
+        }
+
+        function switchView(view) {
+            // Update button states
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide sections
+            document.getElementById('perpetratorsView').classList.remove('active');
+            document.getElementById('generalIncidentsView').classList.remove('active');
+
+            if (view === 'perpetrators') {
+                document.getElementById('perpetratorsView').classList.add('active');
+            } else {
+                document.getElementById('generalIncidentsView').classList.add('active');
+            }
+        }
+
+        function updatePerpetrators() {
+            // Extract potential perpetrators from incident titles and descriptions
+            const perpetratorMap = {};
+
+            allIncidents.forEach(incident => {
+                // Look for person names in the content
+                const text = incident.title + ' ' + incident.description;
+                
+                // Simple pattern: Look for capitalized words that might be names
+                // This is a basic extraction - in production you'd use NER (Named Entity Recognition)
+                const words = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g) || [];
+                
+                words.forEach(name => {
+                    // Filter out common non-name words
+                    const skipWords = ['The', 'This', 'That', 'Says', 'According', 'Police', 'Suspects', 'Reports'];
+                    if (!skipWords.includes(name) && name.length > 3) {
+                        if (!perpetratorMap[name]) {
+                            perpetratorMap[name] = [];
+                        }
+                        perpetratorMap[name].push(incident);
+                    }
+                });
+            });
+
+            // Filter to show only those with multiple incidents
+            const perpetrators = Object.entries(perpetratorMap)
+                .filter(([name, incidents]) => incidents.length > 0)
+                .sort((a, b) => b[1].length - a[1].length)
+                .slice(0, 10); // Top 10 perpetrators
+
+            const html = perpetrators.length > 0 ? perpetrators.map(([name, incidents]) => {
+                const verified = incidents.filter(i => i.status === 'verified').length;
+                const pending = incidents.filter(i => i.status === 'pending_review').length;
+                const disputed = incidents.filter(i => i.status === 'disputed').length;
+                const recent = incidents.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 2);
+                const locations = [...new Set(incidents.map(i => i.location))].join(', ');
+
+                return `
+                    <div class="perpetrator-card">
+                        <div class="perpetrator-header">
+                            <div class="perpetrator-name">👤 ${escapeHtml(name)}</div>
+                            <div class="perpetrator-badge">${incidents.length} incidents</div>
+                        </div>
+
+                        <div class="perpetrator-info">
+                            <div class="perpetrator-stat">
+                                <span class="perpetrator-stat-label">Verified</span>
+                                <span class="perpetrator-stat-value" style="color: #2ecc71;">${verified}</span>
+                            </div>
+                            <div class="perpetrator-stat">
+                                <span class="perpetrator-stat-label">Pending</span>
+                                <span class="perpetrator-stat-value" style="color: #f39c12;">${pending}</span>
+                            </div>
+                            <div class="perpetrator-stat">
+                                <span class="perpetrator-stat-label">Disputed</span>
+                                <span class="perpetrator-stat-value" style="color: #e74c3c;">${disputed}</span>
+                            </div>
+                            <div class="perpetrator-stat">
+                                <span class="perpetrator-stat-label">Verification %</span>
+                                <span class="perpetrator-stat-value">${((verified / incidents.length) * 100).toFixed(0)}%</span>
+                            </div>
+                        </div>
+
+                        <div class="perpetrator-details">
+                            <strong>Locations:</strong> ${escapeHtml(locations)}<br>
+                            <strong>First Reported:</strong> ${formatDate(incidents[incidents.length - 1].date)}<br>
+                            <strong>Most Recent:</strong> ${formatDate(incidents[0].date)}
+                        </div>
+
+                        <div class="perpetrator-incidents">
+                            <strong>Recent Incidents:</strong>
+                            ${recent.map(incident => `
+                                <div class="perpetrator-incident-item">
+                                    <span class="perpetrator-incident-title">${escapeHtml(incident.title.substring(0, 55))}${incident.title.length > 55 ? '...' : ''}</span>
+                                    <span class="perpetrator-incident-meta">${formatDate(incident.date)} • ${incident.location} • ${incident.status.replace(/_/g, ' ')}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('') : '<div class="no-perpetrators">No specific perpetrators identified yet. As more incidents are added and analyzed, individual perpetrators will appear here.</div>';
+
+            document.getElementById('perpetratorsList').innerHTML = html;
+        }
+
+        function updateGeneralIncidents() {
+            // Show incidents grouped by type/category
+            const typeMap = {
+                'Physical Assault': [],
+                'Harassment': [],
+                'Graffiti/Vandalism': [],
+                'Threat': [],
+                'Discrimination': [],
+                'Other': []
+            };
+
+            // Categorize incidents based on keywords in title
+            allIncidents.forEach(incident => {
+                const text = incident.title.toLowerCase();
+                if (text.includes('assault') || text.includes('attack') || text.includes('beaten')) {
+                    typeMap['Physical Assault'].push(incident);
+                } else if (text.includes('harass')) {
+                    typeMap['Harassment'].push(incident);
+                } else if (text.includes('graffiti') || text.includes('vandal') || text.includes('defaced')) {
+                    typeMap['Graffiti/Vandalism'].push(incident);
+                } else if (text.includes('threat') || text.includes('threaten')) {
+                    typeMap['Threat'].push(incident);
+                } else if (text.includes('discriminat') || text.includes('bias')) {
+                    typeMap['Discrimination'].push(incident);
+                } else {
+                    typeMap['Other'].push(incident);
+                }
+            });
+
+            const html = Object.entries(typeMap)
+                .filter(([type, incidents]) => incidents.length > 0)
+                .map(([type, incidents]) => {
+                    const verified = incidents.filter(i => i.status === 'verified').length;
+                    const topLocations = [...new Set(incidents.map(i => i.location))].slice(0, 3).join(', ');
+                    const recent = incidents.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+
+                    return `
+                        <div class="location-card" style="border-left-color: #3498db;">
+                            <div class="location-header">
+                                <div class="location-title">📋 ${escapeHtml(type)}</div>
+                                <div class="location-incident-count" style="background: #3498db;">${incidents.length} incidents</div>
+                            </div>
+
+                            <div class="location-stats">
+                                <div class="stat-mini">
+                                    <span class="stat-mini-label">Total</span>
+                                    <span class="stat-mini-value" style="color: #3498db;">${incidents.length}</span>
+                                </div>
+                                <div class="stat-mini">
+                                    <span class="stat-mini-label">Verified</span>
+                                    <span class="stat-mini-value" style="color: #2ecc71;">${verified}</span>
+                                </div>
+                                <div class="stat-mini">
+                                    <span class="stat-mini-label">Verification %</span>
+                                    <span class="stat-mini-value">${((verified / incidents.length) * 100).toFixed(0)}%</span>
+                                </div>
+                            </div>
+
+                            <div class="perpetrator-details">
+                                <strong>Common Locations:</strong> ${escapeHtml(topLocations)}<br>
+                                <strong>Latest Report:</strong> ${formatDate(incidents[0].date)}
+                            </div>
+
+                            <div class="recent-incidents-list">
+                                <span class="recent-incidents-label">📰 Recent ${type} Incidents:</span>
+                                ${recent.map(incident => `
+                                    <div class="incident-item">
+                                        <span class="incident-item-title">${escapeHtml(incident.title.substring(0, 60))}${incident.title.length > 60 ? '...' : ''}</span>
+                                        <span class="incident-item-date">${formatDate(incident.date)} • ${incident.location}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            document.getElementById('generalIncidentsList').innerHTML = html || '<p style="color: #999;">No general incidents data available</p>';
+        }
         }
 
         function renderIncidents(incidents) {
