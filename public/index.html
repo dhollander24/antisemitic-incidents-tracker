@@ -5,858 +5,163 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Antisemitic Incidents Tracker</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --primary: #1a472a;
-            --primary-light: #2d6b47;
             --accent: #d4a574;
-            --accent-dark: #b8905f;
-            --bg-dark: #0f2818;
             --bg-light: #f5f3f0;
             --text-dark: #1a1a1a;
-            --text-light: #f5f3f0;
-            --border: #e0dbd5;
-            --verified: #2ecc71;
-            --pending: #f39c12;
-            --disputed: #e74c3c;
         }
-
-        body {
-            font-family: 'Georgia', serif;
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-            line-height: 1.6;
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: var(--text-light);
-            padding: 3rem 2rem;
-            border-bottom: 4px solid var(--accent);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .subtitle {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            font-style: italic;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
-
-        .controls {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        button, select, input {
-            padding: 0.75rem 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-family: 'Georgia', serif;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        button {
-            background: var(--primary);
-            color: var(--text-light);
-            border: none;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        button:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        select {
-            background: white;
-            color: var(--text-dark);
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 4px;
-            border-left: 4px solid var(--accent);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #666;
-        }
-
-        .incidents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .incident-card {
-            background: white;
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            border-top: 3px solid var(--accent);
-        }
-
-        .incident-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-        }
-
-        .incident-image {
-            width: 100%;
-            height: 180px;
-            background: var(--bg-dark);
-            object-fit: cover;
-        }
-
-        .incident-content {
-            padding: 1.5rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .incident-header {
-            margin-bottom: 1rem;
-        }
-
-        .incident-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
-        }
-
-        .incident-meta {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.85rem;
-            color: #666;
-            flex-wrap: wrap;
-            margin-bottom: 1rem;
-        }
-
-        .incident-status {
-            display: inline-block;
-            padding: 0.4rem 0.8rem;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
-        }
-
-        .status-verified {
-            background-color: rgba(46, 204, 113, 0.1);
-            color: var(--verified);
-        }
-
-        .status-pending {
-            background-color: rgba(243, 156, 18, 0.1);
-            color: var(--pending);
-        }
-
-        .status-disputed {
-            background-color: rgba(231, 76, 60, 0.1);
-            color: var(--disputed);
-        }
-
-        .incident-footer {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-top: auto;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .incident-link {
-            color: var(--primary);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .incident-link:hover {
-            color: var(--accent);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: #999;
-        }
-
-        .empty-state h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #666;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            button, select {
-                width: 100%;
-            }
-
-            .incidents-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: #999;
-        }
-
-        .error {
-            background-color: #ffe0e0;
-            color: #c00;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .success {
-            background-color: #e0ffe0;
-            color: #060;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .chart-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
-
-        .chart-section h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            color: var(--text-dark);
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: 1rem;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .chart-container {
-            background: #fafaf8;
-            padding: 1.5rem;
-            border-radius: 4px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .chart-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--primary);
-        }
-
-        canvas {
-            max-width: 100%;
-        }
-
-        .toggle-stats {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            background: var(--primary);
-            color: var(--text-light);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .toggle-stats:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .stats-panel {
-            display: none;
-        }
-
-        .stats-panel.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .location-card {
-            background: #fafaf8;
-            padding: 1.5rem;
-            border-radius: 4px;
-            border-left: 4px solid var(--accent);
-            margin-bottom: 1.5rem;
-        }
-
-        .location-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .location-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .location-incident-count {
-            background: var(--primary);
-            color: white;
-            padding: 0.4rem 0.8rem;
-            border-radius: 3px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .trend-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            background: #fafaf8;
-            border-radius: 4px;
-            border-left: 4px solid var(--accent);
-        }
-
-        .trend-label {
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .trend-value {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .view-toggle {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .toggle-btn {
-            padding: 0.75rem 1.5rem;
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            font-family: 'Georgia', serif;
-        }
-
-        .toggle-btn.active {
-            background: var(--primary);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(26, 71, 42, 0.2);
-        }
-
-        .toggle-btn:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .view-section {
-            display: none;
-        }
-
-        .view-section.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .incident-item {
-            font-size: 0.85rem;
-            color: #555;
-            padding: 0.5rem 0;
-            padding-left: 1rem;
-            border-left: 2px solid var(--accent);
-            margin-bottom: 0.5rem;
-        }
-
-        .incident-item-title {
-            font-weight: 600;
-            color: var(--text-dark);
-            display: block;
-            margin-bottom: 0.2rem;
-        }
-
-        .incident-item-date {
-            font-size: 0.75rem;
-            color: #999;
-        }
-
-        .no-data {
-            text-align: center;
-            padding: 2rem;
-            color: #999;
-            background: #fafaf8;
-            border-radius: 4px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            overflow-y: auto;
-        }
-
-        .modal.active {
-            display: block;
-        }
-
-        .modal-content {
-            background-color: var(--bg-light);
-            margin: 0 auto;
-            padding: 0;
-            width: 90%;
-            max-width: 900px;
-            margin-top: 2rem;
-            margin-bottom: 2rem;
-            border-radius: 4px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: var(--text-light);
-            padding: 2rem;
-            border-bottom: 4px solid var(--accent);
-        }
-
-        .modal-header h2 {
-            margin: 0;
-            font-size: 2rem;
-        }
-
-        .modal-body {
-            padding: 2rem;
-        }
-
-        .close-modal {
-            color: var(--text-light);
-            float: right;
-            font-size: 2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .close-modal:hover {
-            color: var(--accent);
-        }
-
-        .mission-text {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: #555;
-            margin-bottom: 1.5rem;
-        }
-
-        .mission-section {
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .mission-section:last-child {
-            border-bottom: none;
-        }
-
-        .mission-section h3 {
-            color: var(--primary);
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-        }
-
-        .perpetrator-list-item {
-            background: white;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border-radius: 4px;
-            border-left: 4px solid #e74c3c;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .perpetrator-name-section {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #c0392b;
-            margin-bottom: 0.5rem;
-        }
-
-        .perpetrator-details-section {
-            font-size: 0.95rem;
-            color: #555;
-            line-height: 1.6;
-            margin-top: 1rem;
-        }
-
-        .perpetrator-details-label {
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .incident-list-section {
-            background: #fafaf8;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-top: 1rem;
-        }
-
-        .page-section {
-            display: none;
-        }
-
-        .page-section.active {
-            display: block;
-        }
-
-        .top-button-bar {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .page-nav-btn {
-            padding: 0.5rem 1rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            font-family: 'Georgia', serif;
-        }
-
-        .page-nav-btn:hover {
-            background: var(--primary-light);
-        }
-
-        .page-nav-btn.active {
-            background: var(--accent);
-            color: var(--primary);
-        }
+        body { font-family: 'Georgia', serif; background: var(--bg-light); color: var(--text-dark); }
+        header { background: linear-gradient(135deg, var(--primary) 0%, #2d6b47 100%); color: white; padding: 2rem; border-bottom: 4px solid var(--accent); }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .subtitle { opacity: 0.9; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+        button, select, input { padding: 0.75rem 1.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: Georgia; cursor: pointer; }
+        button { background: var(--primary); color: white; border: none; font-weight: 600; }
+        button:hover { background: #2d6b47; }
+        button.active { background: var(--accent); color: var(--primary); }
+        .nav-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+        .nav-btn { padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .nav-btn.active { background: var(--accent); color: var(--primary); }
+        .page { display: none; }
+        .page.active { display: block; }
+        .stat-card { background: white; padding: 1.5rem; border-left: 4px solid var(--accent); border-radius: 4px; margin-bottom: 1rem; }
+        .stat-number { font-size: 2.5rem; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 0.9rem; color: #666; text-transform: uppercase; }
+        .incident-card { background: white; padding: 1.5rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid var(--accent); }
+        .incident-title { font-size: 1.1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem; }
+        .incident-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; }
+        .incident-status { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 3px; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .status-verified { background: rgba(46,204,113,0.1); color: #2ecc71; }
+        .status-pending { background: rgba(243,156,18,0.1); color: #f39c12; }
+        .status-disputed { background: rgba(231,76,60,0.1); color: #e74c3c; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
+        .modal.active { display: block; }
+        .modal-content { background: var(--bg-light); margin: 2rem auto; padding: 0; width: 90%; max-width: 900px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .modal-header { background: linear-gradient(135deg, var(--primary) 0%, #2d6b47 100%); color: white; padding: 2rem; }
+        .modal-header h2 { margin: 0; }
+        .close-modal { float: right; font-size: 2rem; font-weight: bold; cursor: pointer; }
+        .modal-body { padding: 2rem; }
+        .mission-section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #ddd; }
+        .mission-section:last-child { border: none; }
+        .mission-section h3 { color: var(--primary); margin-bottom: 1rem; }
+        .perpetrator-item { background: white; padding: 1.5rem; margin-bottom: 1rem; border-radius: 4px; border-left: 4px solid #e74c3c; }
+        .perpetrator-name { font-size: 1.2rem; font-weight: 700; color: #c0392b; margin-bottom: 0.5rem; }
+        .empty-state { text-align: center; padding: 2rem; color: #999; background: #fafaf8; border-radius: 4px; }
+        footer { background: #f5f3f0; border-top: 2px solid var(--accent); padding: 2rem; margin-top: 3rem; text-align: center; font-size: 0.9rem; color: #666; }
+        @media (max-width: 768px) { .controls { flex-direction: column; } button, select { width: 100%; } }
     </style>
 </head>
 <body>
     <header>
-        <div class="header-content">
+        <div class="container">
             <h1>Antisemitic Incidents Tracker</h1>
             <p class="subtitle">Monitoring and documenting antisemitic acts in the United States</p>
         </div>
     </header>
 
     <div class="container">
-        <div id="message"></div>
+        <div id="message" style="margin-bottom: 1rem;"></div>
 
-        <div class="top-button-bar">
-            <button class="page-nav-btn active" onclick="showPage('incidents')">Home</button>
-            <button class="page-nav-btn" onclick="showPage('todays-news')">Today's News</button>
-            <button class="page-nav-btn" onclick="showPage('perpetrators')">Perpetrators Database</button>
-            <button class="page-nav-btn" onclick="showMissionModal()">Mission Statement</button>
+        <div class="nav-buttons">
+            <button class="nav-btn active" onclick="switchPage('home')">Home</button>
+            <button class="nav-btn" onclick="switchPage('todays-news')">Today's News</button>
+            <button class="nav-btn" onclick="switchPage('perpetrators')">Perpetrators</button>
+            <button class="nav-btn" onclick="showMission()">Mission Statement</button>
         </div>
 
-        <!-- Mission Statement Modal -->
+        <!-- Mission Modal -->
         <div id="missionModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <span class="close-modal" onclick="closeMissionModal()">&times;</span>
+                    <span class="close-modal" onclick="closeMission()">&times;</span>
                     <h2>Mission Statement</h2>
                 </div>
                 <div class="modal-body">
                     <div class="mission-section">
                         <h3>Our Purpose</h3>
-                        <p class="mission-text">
-                            The Antisemitic Incidents Tracker is dedicated to monitoring, documenting, and raising awareness about antisemitic acts occurring across the United States. By aggregating news data and tracking incidents, we aim to provide transparency and accountability in the fight against hate and discrimination.
-                        </p>
+                        <p>The Antisemitic Incidents Tracker is dedicated to monitoring, documenting, and raising awareness about antisemitic acts occurring across the United States. By aggregating news data and tracking incidents, we aim to provide transparency and accountability in the fight against hate and discrimination.</p>
                     </div>
-
                     <div class="mission-section">
                         <h3>What We Track</h3>
-                        <p class="mission-text">
-                            We document antisemitic incidents including physical assaults, harassment, threats, vandalism, and discriminatory actions targeting Jewish communities. Our database includes verified incidents from reputable news sources, helping community members, advocates, and policymakers understand the scope and nature of antisemitism in America.
-                        </p>
+                        <p>We document antisemitic incidents including physical assaults, harassment, threats, vandalism, and discriminatory actions targeting Jewish communities. Our database includes verified incidents from reputable news sources.</p>
                     </div>
-
                     <div class="mission-section">
                         <h3>Verification Process</h3>
-                        <p class="mission-text">
-                            All incidents in our tracker are categorized as "Verified," "Pending Review," or "Disputed" to maintain accuracy and credibility. We encourage community members to report incidents and help us verify information, ensuring our database remains a trusted resource for understanding antisemitic hate crimes.
-                        </p>
+                        <p>All incidents are categorized as "Verified," "Pending Review," or "Disputed" to maintain accuracy and credibility. We encourage community members to help verify information.</p>
                     </div>
-
                     <div class="mission-section">
                         <h3>Our Commitment</h3>
-                        <p class="mission-text">
-                            We are committed to accuracy, transparency, and supporting Jewish communities. This tracker serves as a tool for awareness, advocacy, and action against antisemitism. Together, we can work toward a society free from hate and discrimination.
-                        </p>
+                        <p>We are committed to accuracy, transparency, and supporting Jewish communities. This tracker serves as a tool for awareness and advocacy against antisemitism.</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Home/Incidents Page -->
-        <div id="incidents-page" class="page-section active">
-            <button onclick="fetchLatestNews()">Fetch Latest News</button>
-            <button onclick="fetchLastYear()" style="background: #e74c3c;">Fetch Last Year</button>
-            <button class="toggle-stats" onclick="toggleStats()">View Statistics</button>
-            <select id="statusFilter" onchange="filterIncidents()">
-                <option value="">All Statuses</option>
-                <option value="pending_review">Pending Review</option>
-                <option value="verified">Verified</option>
-                <option value="disputed">Disputed</option>
-            </select>
-            <select id="locationFilter" onchange="filterIncidents()">
-                <option value="All">All Locations</option>
-            </select>
-            <input type="text" id="searchInput" placeholder="Search incidents..." onkeyup="filterIncidents()">
-        </div>
+        <!-- Home Page -->
+        <div id="home" class="page active">
+            <div class="controls">
+                <button onclick="fetchLatestNews()">Fetch Latest News</button>
+                <button onclick="fetchLastYear()" style="background: #e74c3c;">Fetch Last Year</button>
+                <button onclick="toggleStats()">View Statistics</button>
+                <select id="statusFilter" onchange="filterIncidents()">
+                    <option value="">All Statuses</option>
+                    <option value="pending_review">Pending Review</option>
+                    <option value="verified">Verified</option>
+                    <option value="disputed">Disputed</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterIncidents()">
+            </div>
 
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <div class="stat-number" id="totalCount">0</div>
-                <div class="stat-label">Total Incidents</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="verifiedCount">0</div>
-                <div class="stat-label">Verified</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="pendingCount">0</div>
-                <div class="stat-label">Pending Review</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="disputedCount">0</div>
-                <div class="stat-label">Disputed</div>
-            </div>
-        </div>
-
-        <div class="stats-panel" id="statsPanel">
-            <div class="chart-section">
-                <h2>Statistics & Trends</h2>
-                
-                <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border);">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">Annual Statistics (Last 12 Months)</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-                        <div style="background: #fafaf8; padding: 1rem; border-radius: 4px; border-left: 4px solid #3498db;">
-                            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">Year-to-Date</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: #3498db;" id="annualTotal">0</div>
-                        </div>
-                        <div style="background: #fafaf8; padding: 1rem; border-radius: 4px; border-left: 4px solid #2ecc71;">
-                            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">Verified</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: #2ecc71;" id="annualVerified">0</div>
-                        </div>
-                        <div style="background: #fafaf8; padding: 1rem; border-radius: 4px; border-left: 4px solid #f39c12;">
-                            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">Avg Per Month</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: #f39c12;" id="avgPerMonth">0</div>
-                        </div>
-                        <div style="background: #fafaf8; padding: 1rem; border-radius: 4px; border-left: 4px solid #e74c3c;">
-                            <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">Most Active Month</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: #e74c3c;" id="mostActiveMonth">-</div>
-                        </div>
-                    </div>
+            <div id="statsContainer" style="display: none; margin-bottom: 2rem;">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">Total Incidents</div>
                 </div>
-                
-                <div class="charts-grid">
-                    <div class="chart-container">
-                        <div class="chart-title">Incidents by Status</div>
-                        <canvas id="statusChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <div class="chart-title">Incidents by Month (Last Year)</div>
-                        <canvas id="monthlyChart"></canvas>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="verifiedCount">0</div>
+                    <div class="stat-label">Verified</div>
                 </div>
-
-                <div class="chart-section" style="background: #fafaf8; margin-top: 1.5rem;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">Key Metrics</h3>
-                    <div class="trend-item" style="margin-bottom: 0.5rem;">
-                        <span class="trend-label">Average Incidents per Day</span>
-                        <span class="trend-value" id="avgPerDay">-</span>
-                    </div>
-                    <div class="trend-item" style="margin-bottom: 0.5rem;">
-                        <span class="trend-label">Most Active State</span>
-                        <span class="trend-value" id="topState">-</span>
-                    </div>
-                    <div class="trend-item">
-                        <span class="trend-label">Verification Rate</span>
-                        <span class="trend-value" id="verificationRate">-</span>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingCount">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="disputedCount">0</div>
+                    <div class="stat-label">Disputed</div>
                 </div>
             </div>
 
-            <div class="chart-section" style="margin-top: 2rem;">
-                <h2>Perpetrator Tracking</h2>
-                
-                <div class="view-toggle">
-                    <button class="toggle-btn active" onclick="switchView('perpetrators')">Specific Perpetrators</button>
-                    <button class="toggle-btn" onclick="switchView('general-incidents')">General Incidents</button>
-                </div>
-
-                <div id="perpetratorsView" class="view-section active">
-                    <div id="perpetratorsList"></div>
-                </div>
-
-                <div id="generalIncidentsView" class="view-section">
-                    <div id="generalIncidentsList"></div>
-                </div>
-            </div>
+            <div id="incidentsGrid"></div>
         </div>
 
         <!-- Today's News Page -->
-        <div id="todays-news-page" class="page-section">
-            <div style="margin-bottom: 2rem;">
-                <h2 style="color: var(--primary); font-size: 1.8rem; margin-bottom: 1rem;">Today's Antisemitic Incidents</h2>
-                <button onclick="fetchTodaysNews()" style="padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Load Today's News</button>
-            </div>
-            <div id="todays-news-grid" class="incidents-grid">
-                <div class="empty-state" style="grid-column: 1 / -1;">No today's news loaded yet. Click "Load Today's News" to fetch.</div>
-            </div>
+        <div id="todays-news" class="page">
+            <h2>Today's News</h2>
+            <button onclick="loadTodaysNews()" style="margin-bottom: 1rem;">Load Today's Incidents</button>
+            <div id="todaysNewsGrid"></div>
         </div>
 
-        <!-- Perpetrators Database Page -->
-        <div id="perpetrators-page" class="page-section">
-            <div style="margin-bottom: 2rem;">
-                <h2 style="color: var(--primary); font-size: 1.8rem; margin-bottom: 1rem;">Perpetrators Database</h2>
-                <p style="color: #666; margin-bottom: 1rem;">List of individuals cited in news reports as committing antisemitic acts. All information is sourced from public news articles.</p>
-                <input type="text" id="perpetrator-search" placeholder="Search by name..." onkeyup="filterPerpetrators()" style="padding: 0.75rem 1.5rem; border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 400px; font-family: 'Georgia', serif;">
-            </div>
-            <div id="perpetrators-list-container">
-                <div class="empty-state">Load incident data to populate perpetrators database.</div>
-            </div>
-        </div>
-
-        </div>
-            <div class="loading">Loading incidents...</div>
+        <!-- Perpetrators Page -->
+        <div id="perpetrators" class="page">
+            <h2>Perpetrators Database</h2>
+            <p style="margin-bottom: 1rem; color: #666;">Individuals cited in news as committing antisemitic acts.</p>
+            <input type="text" id="perpetratorSearch" placeholder="Search by name..." onkeyup="filterPerpList()" style="margin-bottom: 1rem; width: 100%; max-width: 400px;">
+            <div id="perpetratorsList"></div>
         </div>
     </div>
 
-    <footer style="background: #f5f3f0; border-top: 2px solid #d4a574; padding: 2rem; margin-top: 3rem; text-align: center; font-size: 0.9rem; color: #666;">
+    <footer>
         <p style="margin: 0 0 0.5rem 0;">Antisemitic Incidents Tracker</p>
         <p style="margin: 0;">Created by Delilah Hollander</p>
-        <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #999;">&copy; 2026 All rights reserved.</p>
+        <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem;">&copy; 2026 All rights reserved.</p>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         let allIncidents = [];
-        let statusChart = null;
 
         async function loadIncidents() {
             try {
@@ -864,30 +169,26 @@
                 allIncidents = await response.json();
                 renderIncidents(allIncidents);
                 updateStats();
-                populateLocationFilter();
-                updateChartsIfVisible();
             } catch (error) {
-                showMessage('Error loading incidents: ' + error.message, 'error');
+                showMessage('Error: ' + error.message, 'error');
             }
         }
 
         async function fetchLatestNews() {
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = ' Fetching...';
-
+            btn.textContent = 'Fetching...';
             try {
                 const response = await fetch('/api/fetch-news', { method: 'POST' });
                 const data = await response.json();
-                
                 if (response.ok) {
-                    showMessage(`✓ Added ${data.newIncidentsAdded} new incidents (${data.totalIncidents} total)`, 'success');
+                    showMessage('Added ' + data.newIncidentsAdded + ' new incidents', 'success');
                     loadIncidents();
                 } else {
                     showMessage('Error: ' + data.error, 'error');
                 }
             } catch (error) {
-                showMessage('Error fetching news: ' + error.message, 'error');
+                showMessage('Error: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Fetch Latest News';
@@ -897,20 +198,18 @@
         async function fetchLastYear() {
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = ' Fetching Full Year...';
-
+            btn.textContent = 'Fetching...';
             try {
                 const response = await fetch('/api/fetch-news?timeframe=year', { method: 'POST' });
                 const data = await response.json();
-                
                 if (response.ok) {
-                    showMessage(`✓ Added ${data.newIncidentsAdded} new incidents from the last year (${data.totalIncidents} total)`, 'success');
+                    showMessage('Added ' + data.newIncidentsAdded + ' incidents from last year', 'success');
                     loadIncidents();
                 } else {
                     showMessage('Error: ' + data.error, 'error');
                 }
             } catch (error) {
-                showMessage('Error fetching last year data: ' + error.message, 'error');
+                showMessage('Error: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Fetch Last Year';
@@ -918,604 +217,175 @@
         }
 
         function toggleStats() {
-            const panel = document.getElementById('statsPanel');
-            panel.classList.toggle('active');
-            if (panel.classList.contains('active')) {
-                updateCharts();
+            const container = document.getElementById('statsContainer');
+            container.style.display = container.style.display === 'none' ? 'grid' : 'none';
+            if (container.style.display !== 'none') {
+                updateStats();
             }
         }
 
-        function updateChartsIfVisible() {
-            const panel = document.getElementById('statsPanel');
-            if (panel.classList.contains('active')) {
-                updateCharts();
-            }
-        }
-
-        function updateCharts() {
-            updateStatusChart();
-            updateMonthlyChart();
-            updateKeyMetrics();
-            updateAnnualStats();
-            updatePerpetrators();
-            updateGeneralIncidents();
-        }
-
-        function updateStatusChart() {
-            const ctx = document.getElementById('statusChart');
-            if (!ctx) return;
-
-            const statusCounts = {
-                verified: allIncidents.filter(i => i.status === 'verified').length,
-                pending: allIncidents.filter(i => i.status === 'pending_review').length,
-                disputed: allIncidents.filter(i => i.status === 'disputed').length,
-            };
-
-            if (statusChart) {
-                statusChart.destroy();
-            }
-
-            statusChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Verified', 'Pending Review', 'Disputed'],
-                    datasets: [{
-                        data: [statusCounts.verified, statusCounts.pending, statusCounts.disputed],
-                        backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
-                        borderColor: ['#27ae60', '#e67e22', '#c0392b'],
-                        borderWidth: 2,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: { family: "'Georgia', serif", size: 13 },
-                                padding: 15,
-                                color: '#333',
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        let monthlyChart = null;
-
-        function updateMonthlyChart() {
-            const ctx = document.getElementById('monthlyChart');
-            if (!ctx) return;
-
-            // Get incidents from last 12 months
-            const oneYearAgo = new Date();
-            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-            const monthlyData = {};
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            
-            // Initialize all months with 0
-            for (let i = 0; i < 12; i++) {
-                monthlyData[i] = 0;
-            }
-
-            // Count incidents by month
-            allIncidents.forEach(incident => {
-                const date = new Date(incident.date);
-                if (date >= oneYearAgo) {
-                    const month = date.getMonth();
-                    monthlyData[month]++;
-                }
-            });
-
-            if (monthlyChart) {
-                monthlyChart.destroy();
-            }
-
-            monthlyChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [{
-                        label: 'Incidents',
-                        data: Object.values(monthlyData),
-                        backgroundColor: '#1a472a',
-                        borderColor: '#2d6b47',
-                        borderWidth: 1,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                font: { family: "'Georgia', serif", size: 13 },
-                                color: '#333',
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateAnnualStats() {
-            // Get incidents from last 12 months
-            const oneYearAgo = new Date();
-            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-            const yearIncidents = allIncidents.filter(i => new Date(i.date) >= oneYearAgo);
-            
-            const annualTotal = yearIncidents.length;
-            const annualVerified = yearIncidents.filter(i => i.status === 'verified').length;
-            
-            // Calculate average per month
-            const avgPerMonth = (annualTotal / 12).toFixed(1);
-
-            // Find most active month
-            const monthlyCount = {};
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            
-            yearIncidents.forEach(incident => {
-                const date = new Date(incident.date);
-                const month = monthNames[date.getMonth()];
-                monthlyCount[month] = (monthlyCount[month] || 0) + 1;
-            });
-
-            const mostActiveMonth = Object.entries(monthlyCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
-
-            document.getElementById('annualTotal').textContent = annualTotal;
-            document.getElementById('annualVerified').textContent = annualVerified;
-            document.getElementById('avgPerMonth').textContent = avgPerMonth;
-            document.getElementById('mostActiveMonth').textContent = mostActiveMonth;
-        }
-
-        function updateKeyMetrics() {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const daysActive = new Set(allIncidents.map(i => new Date(i.date).toDateString())).size || 1;
-            
-            const avgPerDay = (allIncidents.length / Math.max(daysActive, 1)).toFixed(1);
-            
-            const locationCounts = {};
-            allIncidents.forEach(incident => {
-                locationCounts[incident.location] = (locationCounts[incident.location] || 0) + 1;
-            });
-            const topState = Object.entries(locationCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
-            
-            const verified = allIncidents.filter(i => i.status === 'verified').length;
-            const total = allIncidents.length || 1;
-            const verificationRate = ((verified / total) * 100).toFixed(0);
-
-            document.getElementById('avgPerDay').textContent = avgPerDay;
-            document.getElementById('topState').textContent = topState;
-            document.getElementById('verificationRate').textContent = verificationRate + '%';
-        }
-
-        function switchView(view) {
-            document.querySelectorAll('.toggle-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            document.getElementById('perpetratorsView').classList.remove('active');
-            document.getElementById('generalIncidentsView').classList.remove('active');
-
-            if (view === 'perpetrators') {
-                document.getElementById('perpetratorsView').classList.add('active');
-            } else {
-                document.getElementById('generalIncidentsView').classList.add('active');
-            }
-        }
-
-        function updatePerpetrators() {
-            const perpetratorMap = {};
-            allIncidents.forEach(incident => {
-                const text = incident.title + ' ' + incident.description;
-                const words = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g) || [];
-                
-                words.forEach(name => {
-                    const skipWords = ['The', 'This', 'That', 'Says', 'According', 'Police', 'Suspects', 'Reports'];
-                    if (!skipWords.includes(name) && name.length > 3) {
-                        if (!perpetratorMap[name]) {
-                            perpetratorMap[name] = [];
-                        }
-                        perpetratorMap[name].push(incident);
-                    }
-                });
-            });
-
-            const perpetrators = Object.entries(perpetratorMap)
-                .filter(([name, incidents]) => incidents.length > 0)
-                .sort((a, b) => b[1].length - a[1].length)
-                .slice(0, 10);
-
-            const html = perpetrators.length > 0 ? perpetrators.map(([name, incidents]) => {
-                const verified = incidents.filter(i => i.status === 'verified').length;
-                const pending = incidents.filter(i => i.status === 'pending_review').length;
-                const disputed = incidents.filter(i => i.status === 'disputed').length;
-                const recent = incidents.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 2);
-                const locations = [...new Set(incidents.map(i => i.location))].join(', ');
-
-                return `
-                    <div class="location-card" style="border-left-color: #e74c3c;">
-                        <div class="location-header">
-                            <div class="location-title">${escapeHtml(name)}</div>
-                            <div class="location-incident-count" style="background: #e74c3c;">${incidents.length}</div>
-                        </div>
-                        <div style="margin: 1rem 0; color: #555;">
-                            <strong>Verified:</strong> ${verified} | 
-                            <strong>Pending:</strong> ${pending} | 
-                            <strong>Disputed:</strong> ${disputed}
-                        </div>
-                        <div style="font-size: 0.9rem; color: #555; margin-bottom: 1rem;">
-                            <strong>Locations:</strong> ${escapeHtml(locations)}<br>
-                            <strong>Most Recent:</strong> ${formatDate(incidents[0].date)}
-                        </div>
-                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border);">
-                            ${recent.map(incident => `
-                                <div class="incident-item">
-                                    <span class="incident-item-title">${escapeHtml(incident.title.substring(0, 55))}</span>
-                                    <span class="incident-item-date">${formatDate(incident.date)} • ${incident.location}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('') : '<div class="no-data">No specific perpetrators identified yet. As incidents are added, individual perpetrators will appear here.</div>';
-
-            document.getElementById('perpetratorsList').innerHTML = html;
-        }
-
-        function updateGeneralIncidents() {
-            const typeMap = {
-                'Physical Assault': [],
-                'Harassment': [],
-                'Graffiti/Vandalism': [],
-                'Threat': [],
-                'Discrimination': [],
-                'Other': []
-            };
-
-            allIncidents.forEach(incident => {
-                const text = incident.title.toLowerCase();
-                if (text.includes('assault') || text.includes('attack') || text.includes('beaten')) {
-                    typeMap['Physical Assault'].push(incident);
-                } else if (text.includes('harass')) {
-                    typeMap['Harassment'].push(incident);
-                } else if (text.includes('graffiti') || text.includes('vandal') || text.includes('defaced')) {
-                    typeMap['Graffiti/Vandalism'].push(incident);
-                } else if (text.includes('threat') || text.includes('threaten')) {
-                    typeMap['Threat'].push(incident);
-                } else if (text.includes('discriminat') || text.includes('bias')) {
-                    typeMap['Discrimination'].push(incident);
-                } else {
-                    typeMap['Other'].push(incident);
-                }
-            });
-
-            const html = Object.entries(typeMap)
-                .filter(([type, incidents]) => incidents.length > 0)
-                .map(([type, incidents]) => {
-                    const verified = incidents.filter(i => i.status === 'verified').length;
-                    const topLocations = [...new Set(incidents.map(i => i.location))].slice(0, 3).join(', ');
-                    const recent = incidents.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 2);
-
-                    return `
-                        <div class="location-card" style="border-left-color: #3498db;">
-                            <div class="location-header">
-                                <div class="location-title">${escapeHtml(type)}</div>
-                                <div class="location-incident-count" style="background: #3498db;">${incidents.length}</div>
-                            </div>
-                            <div style="margin: 1rem 0; color: #555;">
-                                <strong>Total:</strong> ${incidents.length} | 
-                                <strong>Verified:</strong> ${verified} | 
-                                <strong>Verification Rate:</strong> ${((verified / incidents.length) * 100).toFixed(0)}%
-                            </div>
-                            <div style="font-size: 0.9rem; color: #555; margin-bottom: 1rem;">
-                                <strong>Common Locations:</strong> ${escapeHtml(topLocations)}
-                            </div>
-                            <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border);">
-                                ${recent.map(incident => `
-                                    <div class="incident-item">
-                                        <span class="incident-item-title">${escapeHtml(incident.title.substring(0, 55))}</span>
-                                        <span class="incident-item-date">${formatDate(incident.date)} • ${incident.location}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-            document.getElementById('generalIncidentsList').innerHTML = html || '<div class="no-data">No incident data available</div>';
+        function updateStats() {
+            document.getElementById('totalCount').textContent = allIncidents.length;
+            document.getElementById('verifiedCount').textContent = allIncidents.filter(i => i.status === 'verified').length;
+            document.getElementById('pendingCount').textContent = allIncidents.filter(i => i.status === 'pending_review').length;
+            document.getElementById('disputedCount').textContent = allIncidents.filter(i => i.status === 'disputed').length;
         }
 
         function renderIncidents(incidents) {
             const grid = document.getElementById('incidentsGrid');
-            
             if (incidents.length === 0) {
-                grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h3>No incidents found</h3><p>Click "Fetch Latest News" to load incident data from news sources.</p></div>';
+                grid.innerHTML = '<div class="empty-state">No incidents. Click "Fetch Latest News" to load data.</div>';
                 return;
             }
-
-            grid.innerHTML = incidents.map(incident => `
+            grid.innerHTML = incidents.map(i => `
                 <div class="incident-card">
-                    ${incident.imageUrl ? `<img src="${incident.imageUrl}" alt="" class="incident-image" onerror="this.style.display='none'">` : ''}
-                    <div class="incident-content">
-                        <div class="incident-header">
-                            <div class="incident-title">${escapeHtml(incident.title)}</div>
-                            <div class="incident-meta">
-                                <div>${formatDate(incident.date)}</div>
-                                <div>${escapeHtml(incident.location)}</div>
-                            </div>
-                            <div class="incident-status status-${incident.status}">
-                                ${incident.status.replace(/_/g, ' ')}
-                            </div>
-                        </div>
-                        <div style="font-size: 0.95rem; color: #555; margin-bottom: 1rem; flex: 1;">
-                            ${escapeHtml(incident.description.substring(0, 150))}${incident.description.length > 150 ? '...' : ''}
-                        </div>
-                        <div class="incident-footer">
-                            <a href="${incident.url}" target="_blank" class="incident-link">Read Full Article →</a>
-                            <span style="font-size: 0.85rem; color: #999;">via ${escapeHtml(incident.source)}</span>
-                        </div>
-                    </div>
+                    <div class="incident-title">${esc(i.title)}</div>
+                    <div class="incident-meta">Date: ${formatDate(i.date)} | Location: ${esc(i.location)}</div>
+                    <div class="incident-status status-${i.status}">${i.status.replace(/_/g, ' ')}</div>
+                    <div style="font-size: 0.9rem; color: #555; margin: 0.5rem 0;">${esc(i.description.substring(0, 120))}...</div>
+                    <a href="${i.url}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600;">Read Article</a>
                 </div>
             `).join('');
         }
 
         function filterIncidents() {
-            const statusFilter = document.getElementById('statusFilter').value;
-            const locationFilter = document.getElementById('locationFilter').value;
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-
-            const filtered = allIncidents.filter(incident => {
-                const matchStatus = !statusFilter || incident.status === statusFilter;
-                const matchLocation = locationFilter === 'All' || incident.location === locationFilter;
-                const matchSearch = !searchTerm || 
-                    incident.title.toLowerCase().includes(searchTerm) ||
-                    incident.description.toLowerCase().includes(searchTerm);
-                
-                return matchStatus && matchLocation && matchSearch;
-            });
-
+            const status = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allIncidents.filter(i => 
+                (!status || i.status === status) && 
+                (i.title.toLowerCase().includes(search) || i.description.toLowerCase().includes(search))
+            );
             renderIncidents(filtered);
         }
 
-        function populateLocationFilter() {
-            const locations = [...new Set(allIncidents.map(i => i.location))].sort();
-            const select = document.getElementById('locationFilter');
-            const currentValue = select.value;
-            
-            select.innerHTML = '<option value="All">All Locations</option>' + 
-                locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
-            
-            select.value = currentValue;
+        function loadTodaysNews() {
+            const today = new Date().toISOString().split('T')[0];
+            const todaysIncidents = allIncidents.filter(i => i.date.split('T')[0] === today);
+            const grid = document.getElementById('todaysNewsGrid');
+            if (todaysIncidents.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No incidents today.</div>';
+                return;
+            }
+            grid.innerHTML = todaysIncidents.map(i => `
+                <div class="incident-card">
+                    <div class="incident-title">${esc(i.title)}</div>
+                    <div class="incident-meta">Location: ${esc(i.location)}</div>
+                    <div class="incident-status status-${i.status}">${i.status.replace(/_/g, ' ')}</div>
+                    <div style="font-size: 0.9rem; margin: 0.5rem 0;">${esc(i.description.substring(0, 150))}...</div>
+                    <a href="${i.url}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600;">Read Article</a>
+                </div>
+            `).join('');
         }
 
-        function updateStats() {
-            const stats = {
-                total: allIncidents.length,
-                verified: allIncidents.filter(i => i.status === 'verified').length,
-                pending: allIncidents.filter(i => i.status === 'pending_review').length,
-                disputed: allIncidents.filter(i => i.status === 'disputed').length,
-            };
+        function loadPerpetrators() {
+            const map = {};
+            const personKeywords = ['arrested', 'suspect', 'accused', 'perpetrator', 'attacker', 'assaulted', 'threatened', 'charged', 'indicted', 'charged with', 'identified as'];
+            
+            allIncidents.forEach(i => {
+                const text = (i.title + ' ' + i.description).toLowerCase();
+                
+                // Look for person names near keywords that indicate perpetrator action
+                personKeywords.forEach(keyword => {
+                    const regex = new RegExp(`${keyword}[^.]*?\\b([A-Z][a-z]+(?:\\s+[A-Z][a-z]+){1,2})\\b`, 'gi');
+                    let match;
+                    while ((match = regex.exec(i.title + ' ' + i.description)) !== null) {
+                        const name = match[1];
+                        // Filter out common non-person words
+                        const skip = ['The', 'This', 'That', 'Jewish', 'United', 'States', 'America', 'Police', 'County', 'Street', 'Avenue', 'According', 'Reports', 'Authorities'];
+                        if (!skip.includes(name) && name.length > 4 && name.split(' ').length >= 2) {
+                            map[name] = (map[name] || 0) + 1;
+                        }
+                    }
+                });
+            });
 
-            document.getElementById('totalCount').textContent = stats.total;
-            document.getElementById('verifiedCount').textContent = stats.verified;
-            document.getElementById('pendingCount').textContent = stats.pending;
-            document.getElementById('disputedCount').textContent = stats.disputed;
+            const perpetrators = Object.entries(map)
+                .filter(([name, count]) => count > 0)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 50); // Top 50
+            
+            const container = document.getElementById('perpetratorsList');
+            if (perpetrators.length === 0) {
+                container.innerHTML = '<div class="empty-state">No perpetrators identified. Perpetrators are extracted from incidents with action keywords like "arrested," "accused," "charged," etc.</div>';
+                return;
+            }
+            
+            container.innerHTML = perpetrators.map(([name, count]) => {
+                // Find incidents related to this person
+                const relatedIncidents = allIncidents.filter(i => 
+                    (i.title + ' ' + i.description).toLowerCase().includes(name.toLowerCase())
+                ).slice(0, 2);
+                
+                return `
+                    <div class="perpetrator-item" data-name="${name.toLowerCase()}">
+                        <div class="perpetrator-name">${esc(name)}</div>
+                        <div style="color: #666; font-size: 0.9rem; margin-bottom: 0.75rem;">Cited in ${count} incident(s)</div>
+                        ${relatedIncidents.length > 0 ? `
+                            <div style="background: #fafaf8; padding: 0.75rem; border-radius: 3px; font-size: 0.85rem;">
+                                <strong>Recent incidents:</strong>
+                                ${relatedIncidents.map(inc => `
+                                    <div style="margin-top: 0.5rem; color: #555;">
+                                        ${esc(inc.title.substring(0, 60))}...
+                                        <div style="color: #999; font-size: 0.8rem;">${formatDate(inc.date)}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
         }
 
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
+        function filterPerpList() {
+            const search = document.getElementById('perpetratorSearch').value.toLowerCase();
+            document.querySelectorAll('.perpetrator-item').forEach(item => {
+                item.style.display = item.getAttribute('data-name').includes(search) ? 'block' : 'none';
             });
         }
 
-        function escapeHtml(text) {
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(page).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (page === 'perpetrators') loadPerpetrators();
+        }
+
+        function showMission() {
+            document.getElementById('missionModal').classList.add('active');
+        }
+
+        function closeMission() {
+            document.getElementById('missionModal').classList.remove('active');
+        }
+
+        window.onclick = function(e) {
+            const modal = document.getElementById('missionModal');
+            if (e.target === modal) modal.classList.remove('active');
+        }
+
+        function showMessage(msg, type) {
+            const el = document.getElementById('message');
+            el.textContent = msg;
+            el.style.background = type === 'error' ? '#ffe0e0' : '#e0ffe0';
+            el.style.color = type === 'error' ? '#c00' : '#060';
+            el.style.padding = '1rem';
+            el.style.borderRadius = '4px';
+            if (type === 'success') setTimeout(() => el.textContent = '', 3000);
+        }
+
+        function formatDate(d) {
+            return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function esc(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        function showMessage(message, type) {
-            const messageEl = document.getElementById('message');
-            messageEl.className = type;
-            messageEl.textContent = message;
-            messageEl.style.display = 'block';
-            
-            if (type === 'success') {
-                setTimeout(() => {
-                    messageEl.style.display = 'none';
-                }, 4000);
-            }
-        }
-
         loadIncidents();
-
-        function showPage(page) {
-            // Hide all pages
-            document.querySelectorAll('.page-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.getElementById('statsPanel').classList.remove('active');
-
-            // Remove active class from all nav buttons
-            document.querySelectorAll('.page-nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // Show selected page
-            if (page === 'incidents') {
-                document.getElementById('incidents-page').classList.add('active');
-                event.target.classList.add('active');
-            } else if (page === 'todays-news') {
-                document.getElementById('todays-news-page').classList.add('active');
-                event.target.classList.add('active');
-            } else if (page === 'perpetrators') {
-                document.getElementById('perpetrators-page').classList.add('active');
-                event.target.classList.add('active');
-                displayPerpetrators();
-            }
-        }
-
-        function showMissionModal() {
-            document.getElementById('missionModal').classList.add('active');
-        }
-
-        function closeMissionModal() {
-            document.getElementById('missionModal').classList.remove('active');
-        }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('missionModal');
-            if (event.target == modal) {
-                modal.classList.remove('active');
-            }
-        }
-
-        async function fetchTodaysNews() {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = 'Fetching...';
-
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                showMessage('Note: Today\'s news requires API connection. Using local data if available.', 'success');
-                
-                const todaysIncidents = allIncidents.filter(incident => {
-                    const incidentDate = new Date(incident.date).toISOString().split('T')[0];
-                    return incidentDate === today;
-                });
-
-                renderTodaysNews(todaysIncidents);
-            } catch (error) {
-                showMessage('Error fetching today\'s news: ' + error.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Load Today\'s News';
-            }
-        }
-
-        function renderTodaysNews(articles) {
-            const grid = document.getElementById('todays-news-grid');
-            
-            if (articles.length === 0) {
-                grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">No antisemitic incidents reported today in your database.</div>';
-                return;
-            }
-
-            grid.innerHTML = articles.map(article => `
-                <div class="incident-card">
-                    ${article.imageUrl ? `<img src="${article.imageUrl}" alt="" class="incident-image" onerror="this.style.display='none'">` : ''}
-                    <div class="incident-content">
-                        <div class="incident-header">
-                            <div class="incident-title">${escapeHtml(article.title)}</div>
-                            <div class="incident-meta">
-                                <div>Published: ${formatDate(article.date)}</div>
-                                <div>Location: ${escapeHtml(article.location)}</div>
-                            </div>
-                        </div>
-                        <div style="font-size: 0.95rem; color: #555; margin-bottom: 1rem; flex: 1;">
-                            ${escapeHtml(article.description || '').substring(0, 150)}...
-                        </div>
-                        <div class="incident-footer">
-                            <a href="${article.url}" target="_blank" class="incident-link">Read Full Article</a>
-                            <span style="font-size: 0.85rem; color: #999;">via ${escapeHtml(article.source)}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function displayPerpetrators() {
-            const perpetratorMap = {};
-
-            allIncidents.forEach(incident => {
-                const text = incident.title + ' ' + incident.description;
-                const words = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g) || [];
-                
-                words.forEach(name => {
-                    const skipWords = ['The', 'This', 'That', 'Says', 'According', 'Police', 'Suspects', 'Reports', 'Jewish', 'United', 'States', 'America', 'New', 'York', 'Los', 'San', 'In', 'Has', 'Was', 'Were', 'Are'];
-                    if (!skipWords.includes(name) && name.length > 3 && /^[A-Z]/.test(name)) {
-                        if (!perpetratorMap[name]) {
-                            perpetratorMap[name] = [];
-                        }
-                        perpetratorMap[name].push(incident);
-                    }
-                });
-            });
-
-            const perpetrators = Object.entries(perpetratorMap)
-                .filter(([name, incidents]) => incidents.length > 0)
-                .sort((a, b) => b[1].length - a[1].length);
-
-            renderPerpetratorsDatabase(perpetrators);
-        }
-
-        function renderPerpetratorsDatabase(perpetrators) {
-            const container = document.getElementById('perpetrators-list-container');
-
-            if (perpetrators.length === 0) {
-                container.innerHTML = '<div class="empty-state">No perpetrators found. Load incident data to populate this database.</div>';
-                return;
-            }
-
-            const html = perpetrators.map(([name, incidents]) => {
-                const verified = incidents.filter(i => i.status === 'verified').length;
-                const recent = incidents.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
-
-                return `
-                    <div class="perpetrator-list-item" data-name="${name.toLowerCase()}">
-                        <div class="perpetrator-name-section">${escapeHtml(name)}</div>
-                        <div class="perpetrator-details-section">
-                            <div><span class="perpetrator-details-label">Total Incidents:</span> ${incidents.length}</div>
-                            <div><span class="perpetrator-details-label">Verified:</span> ${verified}</div>
-                            <div><span class="perpetrator-details-label">Verification Rate:</span> ${((verified / incidents.length) * 100).toFixed(0)}%</div>
-                        </div>
-                        <div class="incident-list-section">
-                            <strong>Recent Incidents:</strong>
-                            ${recent.map(incident => `
-                                <div style="margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border);">
-                                    <div style="font-weight: 600; color: var(--text-dark);">${escapeHtml(incident.title.substring(0, 70))}</div>
-                                    <div style="font-size: 0.85rem; color: #999; margin-top: 0.25rem;">${formatDate(incident.date)} - ${incident.location}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            container.innerHTML = html;
-        }
-
-        function filterPerpetrators() {
-            const searchTerm = document.getElementById('perpetrator-search').value.toLowerCase();
-            const items = document.querySelectorAll('.perpetrator-list-item');
-
-            items.forEach(item => {
-                const name = item.getAttribute('data-name');
-                if (name.includes(searchTerm)) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        }
     </script>
 </body>
 </html>
