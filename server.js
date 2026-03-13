@@ -129,14 +129,26 @@ app.post('/api/fetch-news', async (req, res) => {
     ];
     
     let newIncidents = [];
+    const timeframe = req.query.timeframe || 'month'; // 'month' or 'year'
+    
+    // Calculate date for filtering
+    const fromDate = new Date();
+    if (timeframe === 'year') {
+      fromDate.setFullYear(fromDate.getFullYear() - 1);
+    } else {
+      fromDate.setMonth(fromDate.getMonth() - 1);
+    }
+    const fromDateString = fromDate.toISOString().split('T')[0];
     
     for (const query of searchQueries) {
       const response = await axios.get('https://newsapi.org/v2/everything', {
         params: {
           q: query,
+          from: fromDateString,
           sortBy: 'publishedAt',
           language: 'en',
           apiKey: NEWS_API_KEY,
+          pageSize: 100, // Get more results for year-long fetch
         },
       });
       
