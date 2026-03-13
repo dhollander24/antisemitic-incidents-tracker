@@ -103,6 +103,7 @@
         <!-- Home Page -->
         <div id="home" class="page active">
             <div class="controls">
+                <button onclick="loadIncidents()">Load Stored Data</button>
                 <button onclick="fetchLatestNews()">Fetch Latest News</button>
                 <button onclick="fetchLastYear()" style="background: #e74c3c;">Fetch Last Year</button>
                 <button onclick="toggleStats()">View Statistics</button>
@@ -146,68 +147,64 @@
     <script>
         let allIncidents = [];
 
-        function loadIncidents() {
+        async function loadIncidents() {
             try {
                 const response = await fetch('/api/incidents');
                 allIncidents = await response.json();
                 renderIncidents(allIncidents);
                 updateStats();
             } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
+                showMessage('Error loading incidents: ' + error.message, 'error');
             }
         }
-
-        // Auto-load latest news when page loads
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                console.log('Auto-loading latest news...');
-                // Simulate button click
-                const btn = document.querySelector('button');
-                if (btn && btn.textContent.includes('Fetch Latest News')) {
-                    btn.click();
-                }
-            }, 1000);
-        });
 
         async function fetchLatestNews() {
             const btn = event.target;
             btn.disabled = true;
+            const originalText = btn.textContent;
             btn.textContent = 'Fetching...';
+            
             try {
                 const response = await fetch('/api/fetch-news', { method: 'POST' });
                 const data = await response.json();
+                
                 if (response.ok) {
-                    showMessage('Added ' + data.newIncidentsAdded + ' new incidents', 'success');
-                    loadIncidents();
+                    showMessage('Added ' + data.newIncidentsAdded + ' new incidents. Total: ' + data.totalIncidents, 'success');
+                    await loadIncidents();
                 } else {
-                    showMessage('Error: ' + data.error, 'error');
+                    showMessage('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
             } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
+                showMessage('Error fetching news: ' + error.message, 'error');
+                console.error('Fetch error:', error);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Fetch Latest News';
+                btn.textContent = originalText;
             }
         }
 
         async function fetchLastYear() {
             const btn = event.target;
             btn.disabled = true;
+            const originalText = btn.textContent;
             btn.textContent = 'Fetching...';
+            
             try {
                 const response = await fetch('/api/fetch-news?timeframe=year', { method: 'POST' });
                 const data = await response.json();
+                
                 if (response.ok) {
-                    showMessage('Added ' + data.newIncidentsAdded + ' incidents from last year', 'success');
-                    loadIncidents();
+                    showMessage('Added ' + data.newIncidentsAdded + ' incidents from last year. Total: ' + data.totalIncidents, 'success');
+                    await loadIncidents();
                 } else {
-                    showMessage('Error: ' + data.error, 'error');
+                    showMessage('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
             } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
+                showMessage('Error fetching year data: ' + error.message, 'error');
+                console.error('Fetch error:', error);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Fetch Last Year';
+                btn.textContent = originalText;
             }
         }
 
