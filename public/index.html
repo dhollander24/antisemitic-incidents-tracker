@@ -14,6 +14,11 @@
         .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 2rem 0; }
         .nav button { padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
         .nav button.active { background: var(--accent); color: var(--primary); }
+        .help-section { background: #f0f8ff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; margin-bottom: 2rem; }
+        .help-section h3 { color: var(--primary); margin-bottom: 0.75rem; font-size: 1.1rem; }
+        .help-section p { font-size: 0.95rem; color: #333; line-height: 1.6; }
+        .help-section ul { margin-left: 1.5rem; margin-top: 0.75rem; }
+        .help-section li { margin-bottom: 0.5rem; }
         .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
         button, select, input { padding: 0.75rem 1.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: Georgia; cursor: pointer; }
         button { background: var(--primary); color: white; border: none; font-weight: 600; }
@@ -67,9 +72,11 @@
             <button class="active" onclick="showPage('home')">Home</button>
             <button onclick="showPage('today')">Today's News</button>
             <button onclick="showPage('perpetrators')">Perpetrators</button>
-            <button onclick="showPage('howto')">How to Use</button>
             <button onclick="showPage('mission')">Mission</button>
+            <button onclick="toggleHelp()" style="margin-left: auto; background: #2d6b47;">Help / How to Use</button>
         </div>
+
+        <div id="helpBox" class="help-section" style="display: none;"></div>
 
         <!-- HOME PAGE -->
         <div id="home" class="page show">
@@ -110,88 +117,7 @@
             <div id="perpList"></div>
         </div>
 
-        <!-- HOW TO USE PAGE -->
-        <div id="howto" class="page">
-            <div class="card">
-                <h2>How to Use This Tracker</h2>
-                
-                <div class="section">
-                    <h3>Getting Started</h3>
-                    <p>When you first visit this site, click the <strong>"Load Data"</strong> button to see any previously stored incidents. This will display all antisemitic incidents that have been tracked in the database.</p>
-                </div>
-
-                <div class="section">
-                    <h3>Fetching New Data</h3>
-                    <p><strong>"Fetch Latest News"</strong> - This button pulls the most recent antisemitic incidents from news sources (typically the last 30 days). Click this regularly to keep the database updated with today's incidents.</p>
-                    <p><strong>"Fetch Last Year"</strong> - Use this button to retrieve a comprehensive view of all antisemitic incidents from the past 12 months. This is useful for seeing long-term trends and patterns.</p>
-                </div>
-
-                <div class="section">
-                    <h3>Understanding the Home Page</h3>
-                    <p>The main page displays incident cards with the following information:</p>
-                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                        <li><strong>Title:</strong> The headline of the news report</li>
-                        <li><strong>Date & Location:</strong> When and where the incident occurred</li>
-                        <li><strong>Status:</strong> Verified (confirmed), Pending (needs review), or Disputed (questioned/false)</li>
-                        <li><strong>Description:</strong> A summary of the incident</li>
-                        <li><strong>Link:</strong> Click "Read Full Article" to see the original news source</li>
-                    </ul>
-                    <p style="margin-top: 1rem;">Use the <strong>filter dropdown</strong> to show only Verified, Pending, or Disputed incidents. Use the <strong>search box</strong> to find specific keywords or locations.</p>
-                </div>
-
-                <div class="section">
-                    <h3>Today's News</h3>
-                    <p>Click the <strong>"Today's News"</strong> tab to see only incidents reported today. This helps you stay updated with what's happening right now. Click <strong>"Load Today's News"</strong> to refresh.</p>
-                </div>
-
-                <div class="section">
-                    <h3>Perpetrators Database</h3>
-                    <p>The <strong>"Perpetrators"</strong> tab shows individuals who have been cited in news reports as committing antisemitic acts. Each entry shows:</p>
-                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                        <li><strong>Name:</strong> The person's name (extracted from news reports)</li>
-                        <li><strong>Number of Incidents:</strong> How many incidents they're involved in</li>
-                        <li><strong>Related Articles:</strong> Links to news stories about them with dates and locations</li>
-                    </ul>
-                    <p style="margin-top: 1rem;">Use the <strong>search box</strong> to find specific individuals by typing their name.</p>
-                </div>
-
-                <div class="section">
-                    <h3>Statistics</h3>
-                    <p>On the Home page, click <strong>"Statistics"</strong> to see data organized by year and incident type. This shows:</p>
-                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                        <li><strong>By Year:</strong> How many incidents occurred in each year</li>
-                        <li><strong>By Type:</strong> Physical Assault, Harassment, Graffiti, Threats, Discrimination, and Other</li>
-                        <li><strong>Percentages:</strong> What percentage of each type makes up the total</li>
-                    </ul>
-                    <p style="margin-top: 1rem;">This helps you understand trends and patterns in antisemitic incidents over time.</p>
-                </div>
-
-                <div class="section">
-                    <h3>Understanding Incident Status</h3>
-                    <p><strong>Verified:</strong> The incident has been confirmed from reputable news sources and is documented as accurate.</p>
-                    <p><strong>Pending:</strong> The incident is newly reported and hasn't been fully reviewed or verified yet.</p>
-                    <p><strong>Disputed:</strong> The incident may be inaccurate, disputed, or later found to be false information.</p>
-                </div>
-
-                <div class="section">
-                    <h3>Tips for Using This Tracker</h3>
-                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                        <li>Check back regularly and click "Fetch Latest News" to stay informed</li>
-                        <li>Use the search function to find incidents by location, name, or type</li>
-                        <li>Read the full articles by clicking "Read Full Article" to get complete context</li>
-                        <li>Share this tracker with others who care about understanding antisemitism</li>
-                        <li>Use the statistics to understand trends and advocate for change</li>
-                    </ul>
-                </div>
-
-                <div class="section">
-                    <h3>If You Find an Issue</h3>
-                    <p>If you notice an incident that's incorrectly categorized, a perpetrator name that's wrong, or information that needs updating, please reach out. This tracker is maintained by one person and your feedback helps keep it accurate and useful.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- MISSION PAGE -->
+<!-- MISSION PAGE -->
         <div id="mission" class="page">
             <div class="card">
                 <h2>Mission Statement</h2>
@@ -213,7 +139,7 @@
 
                 <div class="section">
                     <h3>My Commitment</h3>
-                    <p>I am committed to accuracy, transparency, and lifting up the voices of those affected by antisemitism. This tracker is my way of saying: we see what's happening, we're documenting it, and we refuse to let these incidents fade into silence. If you've been affected by antisemitism, or if you see incidents that should be documented, please help me keep this database current and accurate.</p>
+                    <p>I am committed to accuracy, transparency, and lifting up the voices of those affected by antisemitism. This tracker is my way of saying: we see what's happening, we're documenting it, and we refuse to let these incidents fade into silence. If you've been affected by antisemitism, or if you see incidents that should be documented, please reach out to <a href="mailto:antisemiticincidentstracker@gmail.com" style="color: var(--primary); font-weight: 600;">antisemiticincidentstracker@gmail.com</a> to help me keep this database current and accurate.</p>
                 </div>
             </div>
         </div>
@@ -448,6 +374,57 @@
             document.querySelectorAll('.nav button').forEach(x => x.classList.remove('active'));
             event.target.classList.add('active');
             if (p === 'perpetrators') loadPerps();
+            updateHelp(p);
+        }
+
+        function toggleHelp() {
+            const helpBox = document.getElementById('helpBox');
+            helpBox.style.display = helpBox.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function updateHelp(page) {
+            const helpBox = document.getElementById('helpBox');
+            let helpContent = '';
+
+            if (page === 'home') {
+                helpContent = `
+                    <h3>Home Page Guide</h3>
+                    <p><strong>Load Data:</strong> Click this to load stored incidents from the database.</p>
+                    <p><strong>Fetch Latest News:</strong> Pulls the most recent incidents (last 30 days) from news sources. Click regularly to stay updated.</p>
+                    <p><strong>Fetch Last Year:</strong> Gets all incidents from the past 12 months - great for seeing trends.</p>
+                    <p><strong>Statistics:</strong> View incident breakdowns by year and type (Physical Assault, Harassment, Graffiti, etc.).</p>
+                    <p><strong>Filter & Search:</strong> Use the dropdown to filter by status (Verified, Pending, Disputed) or the search box to find keywords.</p>
+                    <p><strong>Incident Cards:</strong> Each card shows title, date, location, status, description, and a link to the full article.</p>
+                `;
+            } else if (page === 'today') {
+                helpContent = `
+                    <h3>Today's News Guide</h3>
+                    <p><strong>Purpose:</strong> See only incidents reported today. Stay updated with what's happening right now.</p>
+                    <p><strong>Load Today's News:</strong> Click this button to refresh and see today's incidents.</p>
+                    <p><strong>What You'll See:</strong> Each incident card shows the title, location, status, description, and a link to the full article.</p>
+                    <p><strong>Tip:</strong> Check this page daily to stay informed about current events.</p>
+                `;
+            } else if (page === 'perpetrators') {
+                helpContent = `
+                    <h3>Perpetrators Database Guide</h3>
+                    <p><strong>What This Shows:</strong> Individuals who have been cited in news reports as committing antisemitic acts.</p>
+                    <p><strong>Name:</strong> The person's name (extracted from news reports mentioning action words like "arrested" or "charged").</p>
+                    <p><strong>Incident Count:</strong> How many incidents this person is mentioned in.</p>
+                    <p><strong>Related Articles:</strong> Links to news stories about them with dates, locations, and descriptions.</p>
+                    <p><strong>Search:</strong> Use the search box to find specific individuals by typing their name.</p>
+                    <p><strong>Links:</strong> Click on any article link to read the full news story from the original source.</p>
+                `;
+            } else if (page === 'mission') {
+                helpContent = `
+                    <h3>Mission Statement</h3>
+                    <p><strong>Purpose:</strong> Learn about why this tracker was created and the mission behind it.</p>
+                    <p><strong>About Me:</strong> Delilah Hollander created this tracker to document the rising tide of antisemitic incidents in America.</p>
+                    <p><strong>My Commitment:</strong> Accuracy, transparency, and supporting those affected by antisemitism.</p>
+                    <p><strong>Your Role:</strong> If you have feedback or notice inaccuracies, please reach out to <a href="mailto:antisemiticincidentstracker@gmail.com" style="color: var(--primary); font-weight: 600;">antisemiticincidentstracker@gmail.com</a> - your input helps keep this tracker reliable.</p>
+                `;
+            }
+
+            helpBox.innerHTML = helpContent || '<h3>Help / How to Use</h3><p>Select a page to see specific instructions.</p>';
         }
 
         function fmt(d) { return new Date(d).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}); }
