@@ -115,24 +115,7 @@
                 <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterIncidents()">
             </div>
 
-            <div id="statsContainer" style="display: none; margin-bottom: 2rem;">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalCount">0</div>
-                    <div class="stat-label">Total Incidents</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="verifiedCount">0</div>
-                    <div class="stat-label">Verified</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="pendingCount">0</div>
-                    <div class="stat-label">Pending</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="disputedCount">0</div>
-                    <div class="stat-label">Disputed</div>
-                </div>
-            </div>
+            <div id="statsContainer" style="display: none; margin-bottom: 2rem; background: white; padding: 2rem; border-radius: 4px;"></div>
 
             <div id="incidentsGrid"></div>
         </div>
@@ -163,7 +146,7 @@
     <script>
         let allIncidents = [];
 
-        async function loadIncidents() {
+        function loadIncidents() {
             try {
                 const response = await fetch('/api/incidents');
                 allIncidents = await response.json();
@@ -173,6 +156,18 @@
                 showMessage('Error: ' + error.message, 'error');
             }
         }
+
+        // Auto-load latest news when page loads
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                console.log('Auto-loading latest news...');
+                // Simulate button click
+                const btn = document.querySelector('button');
+                if (btn && btn.textContent.includes('Fetch Latest News')) {
+                    btn.click();
+                }
+            }, 1000);
+        });
 
         async function fetchLatestNews() {
             const btn = event.target;
@@ -218,17 +213,74 @@
 
         function toggleStats() {
             const container = document.getElementById('statsContainer');
-            container.style.display = container.style.display === 'none' ? 'grid' : 'none';
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
             if (container.style.display !== 'none') {
                 updateStats();
             }
         }
 
         function updateStats() {
-            document.getElementById('totalCount').textContent = allIncidents.length;
-            document.getElementById('verifiedCount').textContent = allIncidents.filter(i => i.status === 'verified').length;
-            document.getElementById('pendingCount').textContent = allIncidents.filter(i => i.status === 'pending_review').length;
-            document.getElementById('disputedCount').textContent = allIncidents.filter(i => i.status === 'disputed').length;
+            // Group by year
+            const yearStats = {};
+            
+            allIncidents.forEach(incident => {
+                const year = new Date(incident.date).getFullYear();
+                if (!yearStats[year]) {
+                    yearStats[year] = {
+                        'Physical Assault': 0,
+                        'Harassment': 0,
+                        'Graffiti/Vandalism': 0,
+                        'Threat': 0,
+                        'Discrimination': 0,
+                        'Other': 0
+                    };
+                }
+                
+                // Categorize by incident type
+                const title = incident.title.toLowerCase();
+                const desc = incident.description.toLowerCase();
+                const text = title + ' ' + desc;
+                
+                if (text.includes('assault') || text.includes('attack') || text.includes('beaten') || text.includes('shooter')) {
+                    yearStats[year]['Physical Assault']++;
+                } else if (text.includes('harass')) {
+                    yearStats[year]['Harassment']++;
+                } else if (text.includes('graffiti') || text.includes('vandal') || text.includes('defaced') || text.includes('spray')) {
+                    yearStats[year]['Graffiti/Vandalism']++;
+                } else if (text.includes('threat') || text.includes('threaten')) {
+                    yearStats[year]['Threat']++;
+                } else if (text.includes('discriminat') || text.includes('bias')) {
+                    yearStats[year]['Discrimination']++;
+                } else {
+                    yearStats[year]['Other']++;
+                }
+            });
+            
+            // Display stats by year
+            let statsHTML = '';
+            Object.keys(yearStats).sort((a, b) => b - a).forEach(year => {
+                const yearData = yearStats[year];
+                const yearTotal = Object.values(yearData).reduce((a, b) => a + b, 0);
+                
+                statsHTML += `
+                    <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 2px solid #ddd;">
+                        <h3 style="color: var(--primary); margin-bottom: 1rem;">${year} Statistics (${yearTotal} total incidents)</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            ${Object.entries(yearData).map(([type, count]) => `
+                                <div style="background: white; padding: 1rem; border-radius: 4px; border-left: 4px solid var(--accent);">
+                                    <div style="font-weight: 600; color: var(--primary); margin-bottom: 0.5rem;">${type}</div>
+                                    <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">${count}</div>
+                                    <div style="font-size: 0.8rem; color: #999;">
+                                        ${((count / yearTotal) * 100).toFixed(0)}% of incidents
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('statsContainer').innerHTML = statsHTML;
         }
 
         function renderIncidents(incidents) {
@@ -278,66 +330,101 @@
         }
 
         function loadPerpetrators() {
-            const map = {};
-            const personKeywords = ['arrested', 'suspect', 'accused', 'perpetrator', 'attacker', 'assaulted', 'threatened', 'charged', 'indicted', 'charged with', 'identified as'];
+            const perpetratorMap = {};
             
-            allIncidents.forEach(i => {
-                const text = (i.title + ' ' + i.description).toLowerCase();
+            // Keywords that indicate someone is the perpetrator
+            const actionPhrases = [
+                'arrested',
+                'charged with',
+                'charged by',
+                'accused of',
+                'suspected of',
+                'indicted',
+                'pleaded guilty',
+                'convicted',
+                'perpetrator',
+                'attacker',
+                'shooter',
+                'assaulted',
+                'threatened',
+                'vandalized',
+                'sprayed',
+                'attacked'
+            ];
+            
+            allIncidents.forEach(incident => {
+                const fullText = (incident.title + ' ' + incident.description);
                 
-                // Look for person names near keywords that indicate perpetrator action
-                personKeywords.forEach(keyword => {
-                    const regex = new RegExp(`${keyword}[^.]*?\\b([A-Z][a-z]+(?:\\s+[A-Z][a-z]+){1,2})\\b`, 'gi');
-                    let match;
-                    while ((match = regex.exec(i.title + ' ' + i.description)) !== null) {
-                        const name = match[1];
-                        // Filter out common non-person words
-                        const skip = ['The', 'This', 'That', 'Jewish', 'United', 'States', 'America', 'Police', 'County', 'Street', 'Avenue', 'According', 'Reports', 'Authorities'];
-                        if (!skip.includes(name) && name.length > 4 && name.split(' ').length >= 2) {
-                            map[name] = (map[name] || 0) + 1;
+                // For each action phrase, find the name that follows
+                actionPhrases.forEach(phrase => {
+                    // Create regex to find names near the action phrase
+                    const patterns = [
+                        new RegExp(`${phrase}\\s+(?:by\\s+)?([A-Z][a-z]+\\s+[A-Z][a-z]+)`, 'gi'),
+                        new RegExp(`([A-Z][a-z]+\\s+[A-Z][a-z]+)\\s+was\\s+(?:arrested|charged|accused)`, 'gi'),
+                        new RegExp(`suspect\\s+([A-Z][a-z]+\\s+[A-Z][a-z]+)`, 'gi'),
+                        new RegExp(`${phrase}\\s+([A-Z][a-z]+\\s+[A-Z][a-z]+)`, 'gi'),
+                    ];
+                    
+                    patterns.forEach(pattern => {
+                        let match;
+                        while ((match = pattern.exec(fullText)) !== null) {
+                            const name = match[1].trim();
+                            
+                            // Filter out common false positives
+                            const skip = ['Jewish', 'United States', 'New York', 'Los Angeles', 'San Francisco', 'Police Department'];
+                            const isSkip = skip.some(s => name.includes(s));
+                            
+                            if (!isSkip && name.length > 4) {
+                                if (!perpetratorMap[name]) {
+                                    perpetratorMap[name] = {
+                                        count: 0,
+                                        incidents: []
+                                    };
+                                }
+                                if (!perpetratorMap[name].incidents.find(inc => inc.id === incident.id)) {
+                                    perpetratorMap[name].incidents.push(incident);
+                                    perpetratorMap[name].count++;
+                                }
+                            }
                         }
-                    }
+                    });
                 });
             });
-
-            const perpetrators = Object.entries(map)
-                .filter(([name, count]) => count > 0)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 50); // Top 50
+            
+            // Sort by frequency
+            const sorted = Object.entries(perpetratorMap)
+                .map(([name, data]) => [name, data])
+                .sort((a, b) => b[1].count - a[1].count)
+                .filter(([_, data]) => data.count > 0);
             
             const container = document.getElementById('perpetratorsList');
-            if (perpetrators.length === 0) {
-                container.innerHTML = '<div class="empty-state">No perpetrators identified. Perpetrators are extracted from incidents with action keywords like "arrested," "accused," "charged," etc.</div>';
+            if (sorted.length === 0) {
+                container.innerHTML = '<div class="empty-state">No specific perpetrators found. As incidents are added with names of people charged or arrested, they will appear here.</div>';
                 return;
             }
             
-            container.innerHTML = perpetrators.map(([name, count]) => {
-                // Find incidents related to this person
-                const relatedIncidents = allIncidents.filter(i => 
-                    (i.title + ' ' + i.description).toLowerCase().includes(name.toLowerCase())
-                ).slice(0, 3);
-                
-                return `
-                    <div class="perpetrator-item" data-name="${name.toLowerCase()}">
-                        <div class="perpetrator-name">${esc(name)}</div>
-                        <div style="color: #666; font-size: 0.9rem; margin-bottom: 0.75rem;">Cited in ${count} incident(s)</div>
-                        ${relatedIncidents.length > 0 ? `
-                            <div style="background: #fafaf8; padding: 0.75rem; border-radius: 3px; font-size: 0.85rem;">
-                                <strong>Related news articles:</strong>
-                                ${relatedIncidents.map(inc => `
-                                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #ddd;">
-                                        <a href="${inc.url}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600; display: block; margin-bottom: 0.3rem;">
-                                            ${esc(inc.title.substring(0, 65))}...
-                                        </a>
-                                        <div style="color: #999; font-size: 0.8rem;">
-                                            ${formatDate(inc.date)} | ${esc(inc.location)} | Via ${esc(inc.source)}
-                                        </div>
-                                    </div>
-                                `).join('')}
+            container.innerHTML = sorted.map(([name, data]) => `
+                <div class="perpetrator-item" data-name="${name.toLowerCase()}">
+                    <div class="perpetrator-name">${esc(name)}</div>
+                    <div style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">Cited in ${data.count} incident(s)</div>
+                    <div style="background: #fafaf8; padding: 1rem; border-radius: 3px;">
+                        <strong style="display: block; margin-bottom: 0.75rem;">Related news articles:</strong>
+                        ${data.incidents.slice(0, 3).map(inc => `
+                            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #ddd;">
+                                <a href="${inc.url}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600; display: block; margin-bottom: 0.3rem; word-break: break-word;">
+                                    ${esc(inc.title)}
+                                </a>
+                                <div style="color: #999; font-size: 0.8rem; margin-top: 0.3rem;">
+                                    ${formatDate(inc.date)} | ${esc(inc.location)} | ${esc(inc.source)}
+                                </div>
+                                <div style="color: #555; font-size: 0.85rem; margin-top: 0.3rem;">
+                                    ${esc(inc.description.substring(0, 100))}...
+                                </div>
                             </div>
-                        ` : ''}
+                        `).join('')}
                     </div>
-                `;
-            }).join('');
+                </div>
+            `).join('');
         }
 
         function filterPerpList() {
