@@ -11,18 +11,24 @@
         header { background: linear-gradient(135deg, var(--primary), #2d6b47); color: white; padding: 2rem; border-bottom: 4px solid var(--accent); }
         h1 { font-size: 2rem; margin-bottom: 0.5rem; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
-        .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 2rem 0; align-items: center; }
+        .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 2rem 0; }
         .nav button { padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
         .nav button.active { background: var(--accent); color: var(--primary); }
-        .nav button:last-child { margin-left: auto; }
+        .help-section { background: #f0f8ff; border-left: 4px solid var(--primary); padding: 1.5rem; border-radius: 4px; margin-bottom: 2rem; }
+        .help-section h3 { color: var(--primary); margin-bottom: 0.75rem; font-size: 1.1rem; }
+        .help-section p { font-size: 0.95rem; color: #333; line-height: 1.6; }
+        .help-section ul { margin-left: 1.5rem; margin-top: 0.75rem; }
+        .help-section li { margin-bottom: 0.5rem; }
+        .help-dropdown { background: white; border: 1px solid #ddd; border-radius: 4px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .help-dropdown h3 { color: var(--primary); margin: 0 0 1rem 0; font-size: 1.1rem; }
+        .help-dropdown p { margin: 0.75rem 0; font-size: 0.95rem; color: #333; line-height: 1.6; }
+        .help-dropdown ul { margin-left: 1.5rem; margin-top: 0.75rem; }
+        .help-dropdown li { margin-bottom: 0.5rem; color: #333; }
         .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
         button, select, input { padding: 0.75rem 1.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: Georgia; cursor: pointer; }
         button { background: var(--primary); color: white; border: none; font-weight: 600; }
         button:hover { background: #2d6b47; }
-        button.green { background: #27ae60; }
-        button.green:hover { background: #229954; }
         button.red { background: #e74c3c; }
-        button.red:hover { background: #c0392b; }
         .page { display: none; }
         .page.show { display: block; }
         .card { background: white; padding: 1.5rem; margin: 1rem 0; border-radius: 4px; border-left: 4px solid var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -34,24 +40,26 @@
         .status-disputed { background: rgba(231,76,60,0.1); color: #c0392b; }
         a { color: var(--primary); text-decoration: none; font-weight: 600; }
         a:hover { color: #2d6b47; }
-        .help-dropdown { background: white; border: 2px solid var(--primary); border-radius: 4px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .help-dropdown h3 { color: var(--primary); margin: 0 0 1rem 0; font-size: 1.2rem; }
-        .help-dropdown p { margin: 0.75rem 0; font-size: 0.95rem; color: #333; line-height: 1.6; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); overflow-y: auto; }
+        .modal.show { display: block; }
+        .modal-content { background: var(--bg); margin: 2rem auto; width: 90%; max-width: 900px; border-radius: 4px; }
+        .modal-header { background: linear-gradient(135deg, var(--primary), #2d6b47); color: white; padding: 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { margin: 0; }
+        .close { font-size: 2rem; cursor: pointer; }
+        .modal-body { padding: 2rem; }
+        .section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #ddd; }
+        .section:last-child { border: none; }
+        .section h3 { color: var(--primary); margin-bottom: 1rem; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .stat { background: white; padding: 1rem; border-radius: 4px; border-left: 4px solid var(--accent); text-align: center; }
+        .stat-number { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 0.8rem; color: #999; text-transform: uppercase; }
         .empty { text-align: center; padding: 2rem; color: #999; background: #fafaf8; border-radius: 4px; }
         .msg { padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
         .msg-error { background: #ffe0e0; color: #c00; }
         .msg-success { background: #e0ffe0; color: #060; }
-        .section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #ddd; }
-        .section:last-child { border: none; }
-        .section h3 { color: var(--primary); margin-bottom: 1rem; }
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
-        .stat-box { background: white; padding: 1rem; border-radius: 4px; border-left: 4px solid var(--accent); text-align: center; }
-        .stat-box-type { font-weight: 600; color: var(--primary); margin-bottom: 0.5rem; }
-        .stat-box-number { font-size: 2rem; font-weight: 700; color: var(--primary); }
-        .stat-box-percent { font-size: 0.8rem; color: #999; margin-top: 0.25rem; }
-        .stats-controls { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: center; }
         footer { background: #f5f3f0; border-top: 2px solid var(--accent); padding: 2rem; margin-top: 3rem; text-align: center; font-size: 0.9rem; color: #666; }
-        @media (max-width: 768px) { .controls { flex-direction: column; } button, select, input { width: 100%; } .nav { flex-direction: column; } .nav button:last-child { margin-left: 0; } }
+        @media (max-width: 768px) { .controls { flex-direction: column; } button, select, input { width: 100%; } }
     </style>
 </head>
 <body>
@@ -66,23 +74,23 @@
         <div id="msg"></div>
 
         <div class="nav">
-            <button class="active" onclick="goToPage('home')">Home</button>
-            <button onclick="goToPage('today')">Today's News</button>
-            <button onclick="goToPage('perpetrators')">Perpetrators</button>
-            <button onclick="goToPage('mission')">Mission</button>
-            <button onclick="toggleHelp()">▼ Help / How to Use</button>
+            <button class="active" onclick="showPage('home')">Home</button>
+            <button onclick="showPage('today')">Today's News</button>
+            <button onclick="showPage('perpetrators')">Perpetrators</button>
+            <button onclick="showPage('mission')">Mission</button>
+            <button onclick="toggleHelp()" style="margin-left: auto; background: #2d6b47;">▼ Help / How to Use</button>
         </div>
 
-        <!-- Help Dropdown -->
+        <!-- Help Dropdown - Shows on every page -->
         <div id="helpDropdown" class="help-dropdown" style="display: none;"></div>
 
         <!-- HOME PAGE -->
         <div id="home" class="page show">
             <div class="controls">
-                <button class="green" onclick="fetchToday()">Fetch Today's News</button>
+                <button onclick="loadData()">Load Data</button>
                 <button onclick="fetchNews()">Fetch Latest News</button>
-                <button class="green" onclick="fetchYear()">Fetch Last Year</button>
-                <button class="red" onclick="showStats()">Statistics</button>
+                <button class="red" onclick="fetchYear()">Fetch Last Year</button>
+                <button onclick="showStats()">Statistics</button>
                 <select id="filter" onchange="applyFilter()">
                     <option value="">All Status</option>
                     <option value="verified">Verified</option>
@@ -93,16 +101,7 @@
             </div>
 
             <div id="stats" style="display:none;">
-                <h2>Statistics</h2>
-                <div class="stats-controls">
-                    <label for="timeframeSelect" style="font-weight: 600;">View by:</label>
-                    <select id="timeframeSelect" onchange="updateStatsDisplay()" style="padding: 0.75rem 1.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="year">Year</option>
-                        <option value="month">Month</option>
-                        <option value="week">Week</option>
-                        <option value="day">Day</option>
-                    </select>
-                </div>
+                <h2>Statistics by Year & Type</h2>
                 <div id="statsContent"></div>
             </div>
 
@@ -124,7 +123,7 @@
             <div id="perpList"></div>
         </div>
 
-        <!-- MISSION PAGE -->
+<!-- MISSION PAGE -->
         <div id="mission" class="page">
             <div class="card">
                 <h2>Mission Statement</h2>
@@ -146,12 +145,12 @@
 
                 <div class="section">
                     <h3>My Commitment</h3>
-                    <p>I am committed to accuracy, transparency, and lifting up the voices of those affected by antisemitism. This tracker is my way of saying: we see what's happening, we're documenting it, and we refuse to let these incidents fade into silence. If you've been affected by antisemitism, or if you see incidents that should be documented, please reach out to <a href="mailto:antisemiticincidentstracker@gmail.com">antisemiticincidentstracker@gmail.com</a> to help me keep this database current and accurate.</p>
+                    <p>I am committed to accuracy, transparency, and lifting up the voices of those affected by antisemitism. This tracker is my way of saying: we see what's happening, we're documenting it, and we refuse to let these incidents fade into silence. If you've been affected by antisemitism, or if you see incidents that should be documented, please reach out to <a href="mailto:antisemiticincidentstracker@gmail.com" style="color: var(--primary); font-weight: 600;">antisemiticincidentstracker@gmail.com</a> to help me keep this database current and accurate.</p>
                 </div>
 
                 <div class="section">
                     <h3>If You Find an Issue</h3>
-                    <p>If you notice an incident that's incorrectly categorized, a perpetrator name that's wrong, or information that needs updating, please contact me at <a href="mailto:antisemiticincidentstracker@gmail.com">antisemiticincidentstracker@gmail.com</a>. This tracker is maintained by one person and your feedback helps keep it accurate and useful for everyone.</p>
+                    <p>If you notice an incident that's incorrectly categorized, a perpetrator name that's wrong, or information that needs updating, please contact me at <a href="mailto:antisemiticincidentstracker@gmail.com" style="color: var(--primary); font-weight: 600;">antisemiticincidentstracker@gmail.com</a>. This tracker is maintained by one person and your feedback helps keep it accurate and useful for everyone.</p>
                 </div>
             </div>
         </div>
@@ -166,36 +165,6 @@
     <script>
         let allData = [];
 
-        // Page navigation with URL hash
-        function goToPage(page) {
-            window.location.hash = page;
-            showPage(page);
-        }
-
-        function showPage(page) {
-            document.querySelectorAll('.page').forEach(x => x.classList.remove('show'));
-            const pageEl = document.getElementById(page);
-            if (pageEl) {
-                pageEl.classList.add('show');
-            }
-            document.querySelectorAll('.nav button').forEach(x => x.classList.remove('active'));
-            document.querySelector(`button[onclick="goToPage('${page}')"]`).classList.add('active');
-            if (page === 'perpetrators') loadPerps();
-            updateHelp(page);
-        }
-
-        // Load page from URL hash on load
-        window.addEventListener('hashchange', function() {
-            const page = window.location.hash.slice(1) || 'home';
-            showPage(page);
-        });
-
-        window.addEventListener('load', function() {
-            const page = window.location.hash.slice(1) || 'home';
-            showPage(page);
-            loadAllData();
-        });
-
         function showMsg(text, type) {
             const el = document.getElementById('msg');
             el.className = 'msg ' + (type === 'error' ? 'msg-error' : 'msg-success');
@@ -203,25 +172,14 @@
             setTimeout(() => el.textContent = '', 4000);
         }
 
-        // FETCH TODAY'S NEWS
-        async function fetchToday() {
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = 'Fetching...';
+        async function loadData() {
             try {
-                const res = await fetch('/api/fetch-news?timeframe=today', { method: 'POST' });
-                const json = await res.json();
-                if (res.ok) {
-                    showMsg('Added ' + json.newIncidentsAdded + ' incidents from today', 'success');
-                    await loadAllData();
-                } else {
-                    showMsg('Note: Today\'s articles may not be available yet from news sources. ' + (json.error || ''), 'error');
-                }
+                const res = await fetch('/api/incidents');
+                allData = await res.json();
+                renderIncidents(allData);
+                showMsg('Data loaded: ' + allData.length + ' incidents', 'success');
             } catch (e) {
-                showMsg('Note: Unable to fetch today\'s news. News sources may not have published today\'s incidents yet.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Fetch Today\'s News';
+                showMsg('Error loading data: ' + e.message, 'error');
             }
         }
 
@@ -234,7 +192,7 @@
                 const json = await res.json();
                 if (res.ok) {
                     showMsg('Added ' + json.newIncidentsAdded + ' new incidents', 'success');
-                    await loadAllData();
+                    await loadData();
                 } else {
                     showMsg('Error: ' + json.error, 'error');
                 }
@@ -255,7 +213,7 @@
                 const json = await res.json();
                 if (res.ok) {
                     showMsg('Added ' + json.newIncidentsAdded + ' incidents from last year', 'success');
-                    await loadAllData();
+                    await loadData();
                 } else {
                     showMsg('Error: ' + json.error, 'error');
                 }
@@ -267,19 +225,9 @@
             }
         }
 
-        async function loadAllData() {
-            try {
-                const res = await fetch('/api/incidents');
-                allData = await res.json();
-                renderIncidents(allData);
-            } catch (e) {
-                showMsg('Error loading data: ' + e.message, 'error');
-            }
-        }
-
         function renderIncidents(data) {
             if (data.length === 0) {
-                document.getElementById('incidents').innerHTML = '<div class="empty">No incidents. Click "Fetch Today\'s News" or "Fetch Latest News" to load data.</div>';
+                document.getElementById('incidents').innerHTML = '<div class="empty">No incidents. Click "Fetch Latest News" to load data.</div>';
                 return;
             }
             document.getElementById('incidents').innerHTML = data.map(i => `
@@ -305,17 +253,10 @@
         }
 
         function loadTodayData() {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const todayData = allData.filter(i => {
-                const incidentDate = new Date(i.date);
-                incidentDate.setHours(0, 0, 0, 0);
-                return incidentDate.getTime() === today.getTime();
-            });
-            
+            const today = new Date().toISOString().split('T')[0];
+            const todayData = allData.filter(i => i.date.split('T')[0] === today);
             if (todayData.length === 0) {
-                document.getElementById('todayIncidents').innerHTML = '<div class="empty">No incidents today. Click "Fetch Today\'s News" on the home page to retrieve today\'s incidents.</div>';
+                document.getElementById('todayIncidents').innerHTML = '<div class="empty">No incidents today.</div>';
                 return;
             }
             document.getElementById('todayIncidents').innerHTML = todayData.map(i => `
@@ -331,33 +272,58 @@
 
         function loadPerps() {
             const nameMap = {};
+            
+            // Extract all potential names from incidents
             allData.forEach(incident => {
                 const fullText = incident.title + ' ' + incident.description;
+                
+                // Look for capitalized two-word names (First Last)
                 const namePattern = /\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b/g;
                 let match;
+                
                 while ((match = namePattern.exec(fullText)) !== null) {
                     const firstName = match[1];
                     const lastName = match[2];
                     const fullName = firstName + ' ' + lastName;
+                    
+                    // Skip common non-person words
                     const skipWords = ['Jewish', 'United', 'States', 'Police', 'County', 'Street', 'Avenue', 'American', 'According', 'Reports', 'Authorities', 'Department', 'News', 'Report', 'York', 'Angeles', 'Francisco', 'Biden', 'Harris'];
+                    
+                    // Only include if it looks like a real name
                     if (!skipWords.includes(firstName) && !skipWords.includes(lastName) && fullName.length > 4) {
+                        // Check if this incident mentions action keywords near this name
                         const textLower = fullText.toLowerCase();
                         const nameIndex = textLower.indexOf(fullName.toLowerCase());
                         const contextWindow = textLower.substring(Math.max(0, nameIndex - 100), Math.min(textLower.length, nameIndex + 100));
+                        
                         const actionWords = ['arrested', 'charged', 'accused', 'suspect', 'perpetrator', 'assaulted', 'attacked', 'threatened', 'vandalized', 'indicted', 'convicted', 'shooter', 'assailant'];
                         const isAction = actionWords.some(word => contextWindow.includes(word));
+                        
                         if (isAction) {
-                            if (!nameMap[fullName]) nameMap[fullName] = [];
-                            if (!nameMap[fullName].find(x => x.id === incident.id)) nameMap[fullName].push(incident);
+                            if (!nameMap[fullName]) {
+                                nameMap[fullName] = [];
+                            }
+                            // Avoid duplicates
+                            if (!nameMap[fullName].find(x => x.id === incident.id)) {
+                                nameMap[fullName].push(incident);
+                            }
                         }
                     }
                 }
             });
-            const sorted = Object.entries(nameMap).filter(([name, incidents]) => incidents.length > 0).sort((a, b) => b[1].length - a[1].length);
+            
+            // Sort by frequency (most incidents first)
+            const sorted = Object.entries(nameMap)
+                .filter(([name, incidents]) => incidents.length > 0)
+                .sort((a, b) => b[1].length - a[1].length);
+            
+            console.log('Found perpetrators:', sorted.length, sorted);
+            
             if (sorted.length === 0) {
-                document.getElementById('perpList').innerHTML = '<div class="empty">No perpetrators found yet.</div>';
+                document.getElementById('perpList').innerHTML = '<div class="empty">No perpetrators found yet. As incidents are added with action keywords like "arrested," "charged," "accused," etc., perpetrator names will appear here.</div>';
                 return;
             }
+            
             document.getElementById('perpList').innerHTML = sorted.map(([name, incidents]) => `
                 <div class="card" data-name="${name.toLowerCase()}">
                     <div class="title" style="color: #c0392b; font-size: 1.3rem;">${esc(name)}</div>
@@ -366,8 +332,9 @@
                         <strong style="display: block; margin-bottom: 0.75rem;">Related news articles:</strong>
                         ${incidents.slice(0, 5).map(inc => `
                             <div style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid #ddd;">
-                                <a href="${inc.url}" target="_blank">${esc(inc.title)}</a>
-                                <div style="font-size:0.85rem; color:#999;">${fmt(inc.date)} | ${esc(inc.location)} | ${esc(inc.source)}</div>
+                                <a href="${inc.url}" target="_blank" style="display: block; margin-bottom: 0.3rem; word-break: break-word;">${esc(inc.title)}</a>
+                                <div style="font-size:0.85rem; color:#999; margin-top:0.25rem;">${fmt(inc.date)} | ${esc(inc.location)} | ${esc(inc.source)}</div>
+                                <div style="font-size:0.85rem; color:#555; margin-top:0.3rem;">${esc(inc.description.substring(0, 100))}...</div>
                             </div>
                         `).join('')}
                     </div>
@@ -383,149 +350,101 @@
         }
 
         function showStats() {
-            document.getElementById('stats').style.display = 'block';
-            setTimeout(() => {
-                const select = document.getElementById('timeframeSelect');
-                if (!select.value) select.value = 'year';
-                updateStatsDisplay();
-            }, 100);
-        }
-
-        function updateStatsDisplay() {
-            const timeframe = document.getElementById('timeframeSelect').value;
-            let html = '';
-
-            if (allData.length === 0) {
-                html = '<div class="empty">No data available. Click "Fetch Today\'s News" or "Fetch Latest News" to load incidents first.</div>';
-                document.getElementById('statsContent').innerHTML = html;
-                return;
-            }
-
-            if (timeframe === 'year') html = getStatsByYear();
-            else if (timeframe === 'month') html = getStatsByMonth();
-            else if (timeframe === 'week') html = getStatsByWeek();
-            else if (timeframe === 'day') html = getStatsByDay();
-
-            if (!html) html = '<div class="empty">No statistics available for this timeframe.</div>';
-            document.getElementById('statsContent').innerHTML = html;
-        }
-
-        function getStatsByYear() {
             const stats = {};
             allData.forEach(i => {
                 const yr = new Date(i.date).getFullYear();
-                if (!stats[yr]) stats[yr] = {'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0};
-                categorizeIncident(i, stats[yr]);
+                if (!stats[yr]) stats[yr] = {
+                    'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0
+                };
+                const t = (i.title + ' ' + i.description).toLowerCase();
+                if (t.includes('assault') || t.includes('attack') || t.includes('shooter')) stats[yr]['Physical Assault']++;
+                else if (t.includes('harass')) stats[yr]['Harassment']++;
+                else if (t.includes('graffiti') || t.includes('vandal')) stats[yr]['Graffiti']++;
+                else if (t.includes('threat')) stats[yr]['Threat']++;
+                else stats[yr]['Other']++;
             });
             let html = '';
             Object.keys(stats).sort((a, b) => b - a).forEach(yr => {
                 const total = Object.values(stats[yr]).reduce((a, b) => a + b);
                 html += `<div style="margin-bottom:2rem;"><h3>${yr} (${total} total)</h3><div class="stat-grid">` +
-                    Object.entries(stats[yr]).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + '</div></div>';
+                    Object.entries(stats[yr]).map(([type, count]) => `
+                        <div class="stat">
+                            <div style="font-weight:600; color:var(--primary); margin-bottom:0.5rem;">${type}</div>
+                            <div class="stat-number">${count}</div>
+                            <div class="stat-label">${((count/total)*100).toFixed(0)}%</div>
+                        </div>
+                    `).join('') + '</div></div>';
             });
-            return html;
+            document.getElementById('statsContent').innerHTML = html;
+            document.getElementById('stats').style.display = 'block';
         }
 
-        function getStatsByMonth() {
-            const stats = {};
-            allData.forEach(i => {
-                const d = new Date(i.date);
-                const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-                if (!stats[key]) stats[key] = {'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0};
-                categorizeIncident(i, stats[key]);
-            });
-            let html = '';
-            Object.keys(stats).sort().reverse().forEach(key => {
-                const [yr, mo] = key.split('-');
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                const total = Object.values(stats[key]).reduce((a, b) => a + b);
-                html += `<div style="margin-bottom:2rem;"><h3>${monthNames[parseInt(mo) - 1]} ${yr} (${total} incidents)</h3><div class="stat-grid">` +
-                    Object.entries(stats[key]).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + '</div></div>';
-            });
-            return html;
-        }
-
-        function getStatsByWeek() {
-            const stats = {};
-            allData.forEach(i => {
-                const d = new Date(i.date);
-                const weekStart = new Date(d);
-                weekStart.setDate(d.getDate() - d.getDay());
-                const key = weekStart.toISOString().split('T')[0];
-                if (!stats[key]) stats[key] = {'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0};
-                categorizeIncident(i, stats[key]);
-            });
-            let html = '';
-            Object.keys(stats).sort().reverse().forEach(key => {
-                const total = Object.values(stats[key]).reduce((a, b) => a + b);
-                const weekEnd = new Date(key);
-                weekEnd.setDate(weekEnd.getDate() + 6);
-                html += `<div style="margin-bottom:2rem;"><h3>Week of ${fmt(key)} - ${fmt(weekEnd.toISOString())} (${total} incidents)</h3><div class="stat-grid">` +
-                    Object.entries(stats[key]).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + '</div></div>';
-            });
-            return html;
-        }
-
-        function getStatsByDay() {
-            const stats = {};
-            allData.forEach(i => {
-                const key = i.date.split('T')[0];
-                if (!stats[key]) stats[key] = {'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0};
-                categorizeIncident(i, stats[key]);
-            });
-            let html = '';
-            Object.keys(stats).sort().reverse().forEach(key => {
-                const total = Object.values(stats[key]).reduce((a, b) => a + b);
-                html += `<div style="margin-bottom:2rem;"><h3>${fmt(key)} (${total} incidents)</h3><div class="stat-grid">` +
-                    Object.entries(stats[key]).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + '</div></div>';
-            });
-            return html;
-        }
-
-        function categorizeIncident(i, statsObj) {
-            const t = (i.title + ' ' + i.description).toLowerCase();
-            if (t.includes('assault') || t.includes('attack') || t.includes('shooter')) statsObj['Physical Assault']++;
-            else if (t.includes('harass')) statsObj['Harassment']++;
-            else if (t.includes('graffiti') || t.includes('vandal')) statsObj['Graffiti']++;
-            else if (t.includes('threat')) statsObj['Threat']++;
-            else statsObj['Other']++;
+        function showPage(p) {
+            document.querySelectorAll('.page').forEach(x => x.classList.remove('show'));
+            document.getElementById(p).classList.add('show');
+            document.querySelectorAll('.nav button').forEach(x => x.classList.remove('active'));
+            event.target.classList.add('active');
+            if (p === 'perpetrators') loadPerps();
+            updateHelp(p);
         }
 
         function toggleHelp() {
             const helpDropdown = document.getElementById('helpDropdown');
-            if (helpDropdown.style.display === 'none') {
-                helpDropdown.style.display = 'block';
-                updateHelp(getCurrentPage());
-            } else {
-                helpDropdown.style.display = 'none';
-            }
-        }
-
-        function getCurrentPage() {
-            const pages = document.querySelectorAll('.page');
-            for (let page of pages) {
-                if (page.classList.contains('show')) return page.id;
-            }
-            return 'home';
+            helpDropdown.style.display = helpDropdown.style.display === 'none' ? 'block' : 'none';
         }
 
         function updateHelp(page) {
             const helpDropdown = document.getElementById('helpDropdown');
             let helpContent = '';
+
             if (page === 'home') {
-                helpContent = `<h3>Home Page - How to Use</h3><p><strong>Fetch Today's News:</strong> Pulls incidents from today specifically. Note: Articles may not be published immediately, so this may show empty if no incidents were reported today.</p><p><strong>Fetch Latest News:</strong> Gets the most recent incidents from the last 30 days.</p><p><strong>Fetch Last Year:</strong> Gets all incidents from the past 12 months for trend analysis.</p><p><strong>Statistics:</strong> Choose Year, Month, Week, or Day to see breakdowns by incident type.</p><p><strong>Filter & Search:</strong> Filter by status or search by keyword.</p>`;
+                helpContent = `
+                    <h3>Home Page - How to Use</h3>
+                    <p><strong>Load Data:</strong> Click this button to load all stored incidents from the database.</p>
+                    <p><strong>Fetch Latest News:</strong> Pulls the most recent antisemitic incidents from news sources (typically the last 30 days). Click regularly to stay updated with new incidents.</p>
+                    <p><strong>Fetch Last Year:</strong> Gets all incidents from the past 12 months - great for seeing long-term trends and patterns.</p>
+                    <p><strong>Statistics:</strong> Click to view incident breakdowns organized by year and incident type (Physical Assault, Harassment, Graffiti, Threats, Discrimination, Other).</p>
+                    <p><strong>Filter by Status:</strong> Use the dropdown menu to show only Verified, Pending Review, or Disputed incidents.</p>
+                    <p><strong>Search:</strong> Type keywords in the search box to find specific incidents by title, location, or description.</p>
+                    <p><strong>Incident Cards:</strong> Each card displays the incident title, date, location, status badge, description, and a clickable link to read the full article.</p>
+                `;
             } else if (page === 'today') {
-                helpContent = `<h3>Today's News - How to Use</h3><p><strong>Purpose:</strong> View only incidents reported today.</p><p><strong>Load Today's News:</strong> Click to refresh and see today's incidents.</p><p><strong>Note:</strong> If nothing shows, it means no incidents were reported today yet.</p>`;
+                helpContent = `
+                    <h3>Today's News - How to Use</h3>
+                    <p><strong>Purpose:</strong> This page shows only incidents reported today, helping you stay updated with what's happening right now.</p>
+                    <p><strong>Load Today's News:</strong> Click this button to refresh and see today's incidents.</p>
+                    <p><strong>What You'll See:</strong> Each incident card shows the title, location, status, description, and a link to the full news article.</p>
+                    <p><strong>Tip:</strong> Check this page daily to stay informed about current events and breaking news about antisemitic incidents.</p>
+                    <p><strong>Full Articles:</strong> Click "Read Article" on any incident to see the original news source and get complete details.</p>
+                `;
             } else if (page === 'perpetrators') {
-                helpContent = `<h3>Perpetrators Database - How to Use</h3><p><strong>Shows:</strong> Individuals cited as committing antisemitic acts in news reports.</p><p><strong>Search:</strong> Type a name to filter results.</p><p><strong>Links:</strong> Click article titles to read the full story.</p>`;
+                helpContent = `
+                    <h3>Perpetrators Database - How to Use</h3>
+                    <p><strong>What This Shows:</strong> Individuals who have been cited in news reports as committing antisemitic acts. Names are extracted from articles mentioning action keywords like "arrested," "charged," or "accused."</p>
+                    <p><strong>Name:</strong> The person's name as reported in news articles.</p>
+                    <p><strong>Incident Count:</strong> The number of incidents this person is mentioned in.</p>
+                    <p><strong>Related Articles:</strong> Links to news stories about this person, including the date, location, news source, and a brief description.</p>
+                    <p><strong>Search by Name:</strong> Use the search box to find specific individuals by typing their first or last name.</p>
+                    <p><strong>Click Article Links:</strong> Click on any article title to open the full news story in a new tab.</p>
+                `;
             } else if (page === 'mission') {
-                helpContent = `<h3>Mission Statement</h3><p><strong>About:</strong> Delilah Hollander created this to document rising antisemitic incidents in America.</p><p><strong>Feedback:</strong> Email <a href="mailto:antisemiticincidentstracker@gmail.com">antisemiticincidentstracker@gmail.com</a> for corrections or suggestions.</p>`;
+                helpContent = `
+                    <h3>Mission Statement - How to Use</h3>
+                    <p><strong>About Me:</strong> Learn about Delilah Hollander and why this tracker was created.</p>
+                    <p><strong>The Problem:</strong> Antisemitic incidents in America have been rising, and this tracker documents them to raise awareness and accountability.</p>
+                    <p><strong>What I Track:</strong> Physical assaults, harassment, vandalism, threats, discrimination, and other antisemitic acts.</p>
+                    <p><strong>My Commitment:</strong> This tracker is dedicated to accuracy, transparency, and supporting those affected by antisemitism.</p>
+                    <p><strong>Provide Feedback:</strong> If you find inaccuracies or have suggestions, contact <a href="mailto:antisemiticincidentstracker@gmail.com" style="color: var(--primary); font-weight: 600;">antisemiticincidentstracker@gmail.com</a></p>
+                `;
             }
-            helpDropdown.innerHTML = helpContent;
+
+            helpDropdown.innerHTML = helpContent || '<h3>Help / How to Use</h3><p>Select a page to see specific instructions.</p>';
         }
 
         function fmt(d) { return new Date(d).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}); }
         function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+        loadData();
     </script>
 </body>
 </html>
