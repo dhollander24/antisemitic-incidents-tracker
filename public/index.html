@@ -514,9 +514,9 @@
         <div id="message"></div>
 
         <div class="controls">
-            <button onclick="fetchLatestNews()">🔄 Fetch Latest News</button>
-            <button onclick="fetchLastYear()" style="background: #e74c3c;">📅 Fetch Last Year</button>
-            <button class="toggle-stats" onclick="toggleStats()">📊 View Statistics</button>
+            <button onclick="fetchLatestNews()">Fetch Latest News</button>
+            <button onclick="fetchLastYear()" style="background: #e74c3c;">Fetch Last Year</button>
+            <button class="toggle-stats" onclick="toggleStats()">View Statistics</button>
             <select id="statusFilter" onchange="filterIncidents()">
                 <option value="">All Statuses</option>
                 <option value="pending_review">Pending Review</option>
@@ -550,10 +550,10 @@
 
         <div class="stats-panel" id="statsPanel">
             <div class="chart-section">
-                <h2>📈 Statistics & Trends</h2>
+                <h2>Statistics & Trends</h2>
                 
                 <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border);">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">📅 Annual Statistics (Last 12 Months)</h3>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">Annual Statistics (Last 12 Months)</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
                         <div style="background: #fafaf8; padding: 1rem; border-radius: 4px; border-left: 4px solid #3498db;">
                             <div style="font-size: 0.75rem; color: #999; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">Year-to-Date</div>
@@ -603,11 +603,11 @@
             </div>
 
             <div class="chart-section" style="margin-top: 2rem;">
-                <h2>🚨 Perpetrator Tracking</h2>
+                <h2>Perpetrator Tracking</h2>
                 
                 <div class="view-toggle">
-                    <button class="toggle-btn active" onclick="switchView('perpetrators')">👤 Specific Perpetrators</button>
-                    <button class="toggle-btn" onclick="switchView('general-incidents')">📰 General Incidents</button>
+                    <button class="toggle-btn active" onclick="switchView('perpetrators')">Specific Perpetrators</button>
+                    <button class="toggle-btn" onclick="switchView('general-incidents')">General Incidents</button>
                 </div>
 
                 <div id="perpetratorsView" class="view-section active">
@@ -624,6 +624,12 @@
             <div class="loading">Loading incidents...</div>
         </div>
     </div>
+
+    <footer style="background: #f5f3f0; border-top: 2px solid #d4a574; padding: 2rem; margin-top: 3rem; text-align: center; font-size: 0.9rem; color: #666;">
+        <p style="margin: 0 0 0.5rem 0;">Antisemitic Incidents Tracker</p>
+        <p style="margin: 0;">Created by Delilah Hollander</p>
+        <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #999;">&copy; 2026 All rights reserved.</p>
+    </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
@@ -646,7 +652,7 @@
         async function fetchLatestNews() {
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = '⏳ Fetching...';
+            btn.textContent = ' Fetching...';
 
             try {
                 const response = await fetch('/api/fetch-news', { method: 'POST' });
@@ -662,14 +668,14 @@
                 showMessage('Error fetching news: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = '🔄 Fetch Latest News';
+                btn.textContent = 'Fetch Latest News';
             }
         }
 
         async function fetchLastYear() {
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = '⏳ Fetching Full Year...';
+            btn.textContent = ' Fetching Full Year...';
 
             try {
                 const response = await fetch('/api/fetch-news?timeframe=year', { method: 'POST' });
@@ -685,7 +691,7 @@
                 showMessage('Error fetching last year data: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = '📅 Fetch Last Year';
+                btn.textContent = 'Fetch Last Year';
             }
         }
 
@@ -923,7 +929,7 @@
                 return `
                     <div class="location-card" style="border-left-color: #e74c3c;">
                         <div class="location-header">
-                            <div class="location-title">👤 ${escapeHtml(name)}</div>
+                            <div class="location-title">${escapeHtml(name)}</div>
                             <div class="location-incident-count" style="background: #e74c3c;">${incidents.length}</div>
                         </div>
                         <div style="margin: 1rem 0; color: #555;">
@@ -987,7 +993,7 @@
                     return `
                         <div class="location-card" style="border-left-color: #3498db;">
                             <div class="location-header">
-                                <div class="location-title">📋 ${escapeHtml(type)}</div>
+                                <div class="location-title">${escapeHtml(type)}</div>
                                 <div class="location-incident-count" style="background: #3498db;">${incidents.length}</div>
                             </div>
                             <div style="margin: 1rem 0; color: #555;">
@@ -1028,8 +1034,8 @@
                         <div class="incident-header">
                             <div class="incident-title">${escapeHtml(incident.title)}</div>
                             <div class="incident-meta">
-                                <div>📅 ${formatDate(incident.date)}</div>
-                                <div>📍 ${escapeHtml(incident.location)}</div>
+                                <div>${formatDate(incident.date)}</div>
+                                <div>${escapeHtml(incident.location)}</div>
                             </div>
                             <div class="incident-status status-${incident.status}">
                                 ${incident.status.replace(/_/g, ' ')}
