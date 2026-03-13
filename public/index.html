@@ -322,6 +322,146 @@
             border-radius: 4px;
             margin-bottom: 1rem;
         }
+
+        .chart-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .chart-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 1rem;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: #fafaf8;
+            padding: 1.5rem;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        .trends-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .trend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #fafaf8;
+            border-radius: 4px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .trend-label {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .trend-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .toggle-stats {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-stats:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .stats-panel {
+            display: none;
+        }
+
+        .stats-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .top-locations {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .location-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .location-name {
+            min-width: 120px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .location-count {
+            flex: 1;
+            height: 24px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .count-label {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -337,6 +477,7 @@
 
         <div class="controls">
             <button onclick="fetchLatestNews()">🔄 Fetch Latest News</button>
+            <button class="toggle-stats" onclick="toggleStats()">📊 View Statistics</button>
             <select id="statusFilter" onchange="filterIncidents()">
                 <option value="">All Statuses</option>
                 <option value="pending_review">Pending Review</option>
@@ -368,13 +509,51 @@
             </div>
         </div>
 
+        <div class="stats-panel" id="statsPanel">
+            <div class="chart-section">
+                <h2>📈 Statistics & Trends</h2>
+                
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">Incidents by Status</div>
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-title">Top 5 Locations</div>
+                        <div id="topLocations" class="top-locations"></div>
+                    </div>
+                </div>
+
+                <div class="chart-section" style="background: #fafaf8; margin-top: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">Key Metrics</h3>
+                    <div class="trends-list">
+                        <div class="trend-item">
+                            <span class="trend-label">Average Incidents per Day</span>
+                            <span class="trend-value" id="avgPerDay">-</span>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-label">Most Active State</span>
+                            <span class="trend-value" id="topState">-</span>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-label">Verification Rate</span>
+                            <span class="trend-value" id="verificationRate">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="incidents-grid" id="incidentsGrid">
             <div class="loading">Loading incidents...</div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         let allIncidents = [];
+        let statusChart = null;
 
         async function loadIncidents() {
             try {
@@ -383,6 +562,7 @@
                 renderIncidents(allIncidents);
                 updateStats();
                 populateLocationFilter();
+                updateChartsIfVisible();
             } catch (error) {
                 showMessage('Error loading incidents: ' + error.message, 'error');
             }
@@ -409,6 +589,116 @@
                 btn.disabled = false;
                 btn.textContent = '🔄 Fetch Latest News';
             }
+        }
+
+        function toggleStats() {
+            const panel = document.getElementById('statsPanel');
+            panel.classList.toggle('active');
+            if (panel.classList.contains('active')) {
+                updateCharts();
+            }
+        }
+
+        function updateChartsIfVisible() {
+            const panel = document.getElementById('statsPanel');
+            if (panel.classList.contains('active')) {
+                updateCharts();
+            }
+        }
+
+        function updateCharts() {
+            updateStatusChart();
+            updateTopLocations();
+            updateKeyMetrics();
+        }
+
+        function updateStatusChart() {
+            const ctx = document.getElementById('statusChart');
+            if (!ctx) return;
+
+            const statusCounts = {
+                verified: allIncidents.filter(i => i.status === 'verified').length,
+                pending: allIncidents.filter(i => i.status === 'pending_review').length,
+                disputed: allIncidents.filter(i => i.status === 'disputed').length,
+            };
+
+            if (statusChart) {
+                statusChart.destroy();
+            }
+
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Verified', 'Pending Review', 'Disputed'],
+                    datasets: [{
+                        data: [statusCounts.verified, statusCounts.pending, statusCounts.disputed],
+                        backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
+                        borderColor: ['#27ae60', '#e67e22', '#c0392b'],
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: "'Georgia', serif", size: 13 },
+                                padding: 15,
+                                color: '#333',
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTopLocations() {
+            const locationCounts = {};
+            allIncidents.forEach(incident => {
+                locationCounts[incident.location] = (locationCounts[incident.location] || 0) + 1;
+            });
+
+            const sorted = Object.entries(locationCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            const maxCount = sorted.length > 0 ? sorted[0][1] : 1;
+
+            const html = sorted.map(([location, count]) => `
+                <div class="location-bar">
+                    <div class="location-name">${escapeHtml(location)}</div>
+                    <div class="location-count">
+                        <div class="count-label">${count}</div>
+                        <div style="height: 100%; width: ${(count / maxCount) * 100}%; background: linear-gradient(90deg, #1a472a, #2d6b47); border-radius: 2px;"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('topLocations').innerHTML = html || '<p style="color: #999;">No data yet</p>';
+        }
+
+        function updateKeyMetrics() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const daysActive = new Set(allIncidents.map(i => new Date(i.date).toDateString())).size || 1;
+            
+            const avgPerDay = (allIncidents.length / Math.max(daysActive, 1)).toFixed(1);
+            
+            const locationCounts = {};
+            allIncidents.forEach(incident => {
+                locationCounts[incident.location] = (locationCounts[incident.location] || 0) + 1;
+            });
+            const topState = Object.entries(locationCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+            
+            const verified = allIncidents.filter(i => i.status === 'verified').length;
+            const total = allIncidents.length || 1;
+            const verificationRate = ((verified / total) * 100).toFixed(0);
+
+            document.getElementById('avgPerDay').textContent = avgPerDay;
+            document.getElementById('topState').textContent = topState;
+            document.getElementById('verificationRate').textContent = verificationRate + '%';
         }
 
         function renderIncidents(incidents) {
