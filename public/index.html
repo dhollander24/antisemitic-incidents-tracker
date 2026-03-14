@@ -602,11 +602,13 @@
         }
 
         function renderIncidents(data) {
+            const container = document.getElementById('incidents');
             if (data.length === 0) {
-                document.getElementById('incidents').innerHTML = '<div class="empty">No incidents. Click "Fetch Latest News" to load data.</div>';
+                container.innerHTML = '<div class="empty">No incidents found. Try adjusting your filters or click "Fetch Latest News" to load data.</div>';
                 return;
             }
-            document.getElementById('incidents').innerHTML = data.map(i => `
+            const countHtml = `<div style="font-weight: 600; color: var(--text-light); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);">Showing ${data.length} incident${data.length !== 1 ? 's' : ''}</div>`;
+            const cardsHtml = data.map(i => `
                 <div class="card">
                     <div class="title">${esc(i.title)}</div>
                     <div class="meta">Date: ${fmt(i.date)} | Location: ${esc(i.location)} | Source: ${esc(i.source)}</div>
@@ -615,6 +617,7 @@
                     <a href="${i.url}" target="_blank">Read Full Article</a>
                 </div>
             `).join('');
+            container.innerHTML = countHtml + cardsHtml;
         }
 
         function applyFilter() {
@@ -629,19 +632,22 @@
         }
 
         function loadTodayData() {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 2); // 48-hour window for broader match
+            yesterday.setHours(0, 0, 0, 0);
+            
             const todayData = allData.filter(i => {
                 const incidentDate = new Date(i.date);
                 if (isNaN(incidentDate.getTime())) return false; // Ignore invalid dates
-                incidentDate.setHours(0, 0, 0, 0);
-                return incidentDate.getTime() === today.getTime();
+                return incidentDate.getTime() >= yesterday.getTime();
             });
+            const container = document.getElementById('todayIncidents');
             if (todayData.length === 0) {
-                document.getElementById('todayIncidents').innerHTML = '<div class="empty">No incidents from today yet. News articles are published throughout the day, so check back later.</div>';
+                container.innerHTML = '<div class="empty">No incidents from the last 48 hours. News articles are published throughout the day, so check back later.</div>';
                 return;
             }
-            document.getElementById('todayIncidents').innerHTML = todayData.map(i => `
+            const countHtml = `<div style="font-weight: 600; color: var(--text-light); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);">Showing ${todayData.length} recent incident${todayData.length !== 1 ? 's' : ''}</div>`;
+            const cardsHtml = todayData.map(i => `
                 <div class="card">
                     <div class="title">${esc(i.title)}</div>
                     <div class="meta">Location: ${esc(i.location)}</div>
@@ -650,6 +656,7 @@
                     <a href="${i.url}" target="_blank">Read Article</a>
                 </div>
             `).join('');
+            container.innerHTML = countHtml + cardsHtml;
         }
 
         function loadPerps() {
@@ -683,11 +690,20 @@
                 'Against', 'Over', 'Under', 'Above', 'Below', 'Behind', 'Beside', 'Between',
                 'During', 'After', 'Before', 'Since', 'Until', 'While', 'Although', 'Because',
                 'If', 'Unless', 'Except', 'Or', 'Nor', 'But', 'And', 'Yet', 'So', 'For',
+                'Except', 'Or', 'Nor', 'But', 'And', 'Yet', 'So', 'For', 'Read', 'More', 'Read More', 'More Data',
                 'As', 'Than', 'That', 'Which', 'Who', 'Whom', 'Whose', 'What', 'Whatever',
                 'Whoever', 'Whomever', 'This', 'These', 'Those', 'Some', 'Any', 'Many', 'Few',
                 'All', 'Both', 'Neither', 'Each', 'Every', 'Other', 'Another', 'Such', 'Same',
                 'Different', 'Next', 'Last', 'Past', 'Present', 'Future', 'Now', 'Then', 'Here',
-                'There', 'Where', 'When', 'Why', 'How', 'Not', 'No', 'Yes', 'True', 'False'
+                'There', 'Where', 'When', 'Why', 'How', 'Not', 'No', 'Yes', 'True', 'False',
+                // US States
+                'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware',
+                'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky',
+                'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
+                'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico',
+                'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania',
+                'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+                'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
             ].map(w => w.toLowerCase()));
 
             allData.forEach(incident => {
@@ -718,8 +734,8 @@
                         const actionWords = ['arrested', 'charged', 'accused', 'suspect', 'perpetrator', 'assaulted', 'attacked', 'threatened', 'vandalized', 'indicted', 'convicted', 'shooter', 'assailant', 'identified as', 'pleaded guilty', 'sentenced'];
                         const isAction = actionWords.some(word => contextWindow.includes(word));
                         
-                        // Guard against reporters, victims, or officials
-                        const negativeWords = ['reporter', 'journalist', 'victim', 'rabbi', 'police', 'officer', 'mayor', 'governor', 'said', 'according to'];
+                        // Guard against reporters, victims, officials, or CTA text like "Read More"
+                        const negativeWords = ['reporter', 'journalist', 'victim', 'rabbi', 'police', 'officer', 'mayor', 'governor', 'said', 'according to', 'read more', 'click here'];
                         const isNegative = negativeWords.some(word => contextWindow.includes(word));
 
                         if (isAction && !isNegative) {
@@ -732,10 +748,12 @@
             
             // Render Perps
             const sortedPerps = Object.entries(nameMap).filter(([name, incidents]) => incidents.length > 0).sort((a, b) => b[1].length - a[1].length);
+            
             if (sortedPerps.length === 0) {
                 document.getElementById('perpList').innerHTML = '<div class="empty">No named perpetrators found in the current articles using natural language heuristics.</div>';
             } else {
-                document.getElementById('perpList').innerHTML = sortedPerps.map(([name, incidents]) => `
+                const countHtml = `<div style="font-weight: 600; color: var(--text-light); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);">Showing ${sortedPerps.length} suspect${sortedPerps.length !== 1 ? 's' : ''}</div>`;
+                const cardsHtml = sortedPerps.map(([name, incidents]) => `
                     <div class="card" data-name="${name.toLowerCase()}">
                         <div class="title" style="color: #c0392b; font-size: 1.2rem;">${esc(name)}</div>
                         <div class="meta">Cited in ${incidents.length} incident(s)</div>
@@ -749,6 +767,7 @@
                         </div>
                     </div>
                 `).join('');
+                document.getElementById('perpList').innerHTML = countHtml + cardsHtml;
             }
 
             // Render Locations
@@ -760,7 +779,7 @@
                     <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #eee;">
                         <div>
                             <span style="font-weight: 600; color: #555; margin-right: 0.5rem;">#${index + 1}</span>
-                            <span style="font-weight: 600; color: var(--primary);">${esc(loc)}</span>
+                            <a href="#" onclick="filterByLocation('${esc(loc)}'); return false;" style="font-weight: 600; color: var(--accent); cursor:pointer;">${esc(loc)}</a>
                         </div>
                         <span style="background: rgba(26, 71, 42, 0.1); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">
                             ${count} report${count !== 1 ? 's' : ''}
@@ -775,6 +794,18 @@
             document.querySelectorAll('[data-name]').forEach(el => {
                 el.style.display = el.getAttribute('data-name').includes(search) ? 'block' : 'none';
             });
+        }
+        
+        function filterByLocation(loc) {
+            // Jump to home
+            goToPage('home');
+            // Set the search bar
+            const searchInput = document.getElementById('search');
+            searchInput.value = loc;
+            // Highlight the search bar briefly to show what happened
+            searchInput.focus();
+            // Trigger the actual filtering logic
+            applyFilter();
         }
 
         function toggleStats() {
