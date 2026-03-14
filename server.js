@@ -15,6 +15,12 @@ app.use(express.static('public'));
 // News API key from environment
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 
+// Log at startup to help debug
+console.log('=== SERVER STARTUP ===');
+console.log('PORT:', PORT);
+console.log('NEWS_API_KEY configured:', NEWS_API_KEY ? 'YES' : 'NO - THIS IS THE PROBLEM');
+console.log('=====================');
+
 // In-memory storage (in production, use a database like MongoDB or PostgreSQL)
 let incidents = [];
 
@@ -117,8 +123,14 @@ app.delete('/api/incidents/:id', (req, res) => {
 // Fetch from News API
 app.post('/api/fetch-news', async (req, res) => {
   try {
+    console.log('\n=== FETCH NEWS REQUEST ===');
+    console.log('NEWS_API_KEY present:', NEWS_API_KEY ? 'YES' : 'NO');
+    
     if (!NEWS_API_KEY) {
-      return res.status(400).json({ error: 'NEWS_API_KEY not configured' });
+      console.log('ERROR: NEWS_API_KEY is not configured!');
+      return res.status(400).json({ 
+        error: 'NEWS_API_KEY not configured. Add it to Heroku Settings > Config Vars' 
+      });
     }
     
     const searchQueries = [
@@ -140,8 +152,13 @@ app.post('/api/fetch-news', async (req, res) => {
     }
     const fromDateString = fromDate.toISOString().split('T')[0];
     
-    for (const query of searchQueries) {
+    console.log('Timeframe:', timeframe);
+    console.log('From date:', fromDateString);
+    
+    for (let i = 0; i < searchQueries.length; i++) {
+      const query = searchQueries[i];
       try {
+        console.log(`  [${i+1}/${searchQueries.length}] Fetching: "${query}"`);
         const response = await axios.get('https://newsapi.org/v2/everything', {
           params: {
             q: query,
@@ -149,7 +166,7 @@ app.post('/api/fetch-news', async (req, res) => {
             sortBy: 'publishedAt',
             language: 'en',
             apiKey: NEWS_API_KEY,
-            pageSize: 100,
+            pageSize: 50,
           },
           timeout: 10000,
           headers: {
@@ -157,20 +174,37 @@ app.post('/api/fetch-news', async (req, res) => {
           }
         });
       
-      if (response.data.articles) {
-        newIncidents.push(
-          ...response.data.articles.map(article => parseIncident(article))
-        );
-      }
+        if (response.data.articles) {
+          console.log(`    Got ${response.data.articles.length} articles`);
+          newIncidents.push(
+            ...response.data.articles.map(article => parseIncident(article))
+          );
+        }
       } catch (queryError) {
-        console.error(`Error with query "${query}":`, queryError.message);
+        console.error(`  ERROR with "${query}":`, queryError.response?.status || queryError.message);
+        if (queryError.response?.status === 401) {
+          console.error('  AUTH FAILED - Invalid API key!');
+        } else if (queryError.response?.status === 429) {
+          console.error('  RATE LIMITED - Too many requests. Wait before trying again.');
+        }
         continue;
       }
+      
+      // Add delay between queries to avoid rate limiting
+      if (i < searchQueries.length - 1) {
+        console.log('  Waiting 2 seconds before next query...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     }
+    
+    console.log('Total articles fetched:', newIncidents.length);
     
     // Add new incidents (avoid duplicates based on URL)
     const existingUrls = new Set(incidents.map(i => i.url));
     const uniqueNewIncidents = newIncidents.filter(i => !existingUrls.has(i.url));
+    
+    console.log('New unique incidents:', uniqueNewIncidents.length);
+    console.log('Total incidents in database:', incidents.length + uniqueNewIncidents.length);
     
     incidents.push(...uniqueNewIncidents);
     
