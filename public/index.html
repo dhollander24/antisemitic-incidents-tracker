@@ -77,9 +77,9 @@
 
         <div id="home" class="page show">
             <div class="controls">
-                <button class="green" onclick="fetchToday()">Fetch Today's News</button>
-                <button onclick="fetchNews()">Fetch Latest News</button>
-                <button class="green" onclick="fetchYear()">Fetch Last Year</button>
+                <button class="green" onclick="fetchToday(event)">Fetch Today's News</button>
+                <button onclick="fetchNews(event)">Fetch Latest News</button>
+                <button class="green" onclick="fetchYear(event)">Fetch Last Year</button>
                 <button class="red" onclick="toggleStats()">Statistics</button>
                 <select id="filter" onchange="applyFilter()">
                     <option value="">All Status</option>
@@ -168,6 +168,7 @@
             document.querySelectorAll('.nav button').forEach(x => x.classList.remove('active'));
             document.querySelector(`button[onclick="goToPage('${page}')"]`).classList.add('active');
             if (page === 'perpetrators') loadPerps();
+            else if (page === 'today') loadTodayData();
             updateHelp(page);
         }
 
@@ -189,12 +190,12 @@
             setTimeout(() => el.textContent = '', 4000);
         }
 
-        async function fetchToday() {
-            const btn = event.target;
+        async function fetchToday(e) {
+            const btn = e ? e.target : document.querySelector('button[onclick="fetchToday(event)"]');
             btn.disabled = true;
             btn.textContent = 'Fetching...';
             try {
-                const res = await fetch('/api/fetch-news', { method: 'POST' });
+                const res = await fetch('/api/fetch-news?timeframe=today', { method: 'POST' });
                 const json = await res.json();
                 if (res.ok) {
                     showMsg('Fetched latest news. Go to Today tab to see today incidents.', 'success');
@@ -210,8 +211,8 @@
             }
         }
 
-        async function fetchNews() {
-            const btn = event.target;
+        async function fetchNews(e) {
+            const btn = e ? e.target : document.querySelector('button[onclick="fetchNews(event)"]');
             btn.disabled = true;
             btn.textContent = 'Fetching...';
             try {
@@ -231,8 +232,8 @@
             }
         }
 
-        async function fetchYear() {
-            const btn = event.target;
+        async function fetchYear(e) {
+            const btn = e ? e.target : document.querySelector('button[onclick="fetchYear(event)"]');
             btn.disabled = true;
             btn.textContent = 'Fetching...';
             try {
