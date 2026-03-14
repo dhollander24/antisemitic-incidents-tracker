@@ -114,10 +114,21 @@
         </div>
 
         <div id="perpetrators" class="page">
-            <h2>Perpetrators Database</h2>
-            <p>Individuals cited in news reports as committing antisemitic acts.</p>
-            <input type="text" id="perpSearch" placeholder="Search by name..." onkeyup="filterPerps()" style="width:100%; max-width:400px; padding:0.75rem; margin:1rem 0; border:1px solid #ddd; border-radius:4px;">
-            <div id="perpList"></div>
+            <h2>Perpetrators Database & Top Locations</h2>
+            <p>Individuals cited as committing antisemitic acts, and the most frequently reported locations.</p>
+            
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap; margin-top: 2rem;">
+                <div style="flex: 2; min-width: 300px;">
+                    <h3>Reported Perpetrators</h3>
+                    <input type="text" id="perpSearch" placeholder="Search by name..." onkeyup="filterPerps()" style="width:100%; max-width:400px; padding:0.75rem; margin:1rem 0; border:1px solid #ddd; border-radius:4px;">
+                    <div id="perpList"></div>
+                </div>
+                
+                <div style="flex: 1; min-width: 250px;">
+                    <h3>Most Repeated Locations</h3>
+                    <div id="locationList" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
         </div>
 
         <div id="mission" class="page">
@@ -295,6 +306,7 @@
             today.setHours(0, 0, 0, 0);
             const todayData = allData.filter(i => {
                 const incidentDate = new Date(i.date);
+                if (isNaN(incidentDate.getTime())) return false; // Ignore invalid dates
                 incidentDate.setHours(0, 0, 0, 0);
                 return incidentDate.getTime() === today.getTime();
             });
@@ -315,48 +327,120 @@
 
         function loadPerps() {
             const nameMap = {};
+            const locationMap = {};
+            
+            // Expanded stop-words, titles, and non-names to heavily filter bad regex matches
+            const skipWords = new Set([
+                'Jewish', 'United', 'States', 'Police', 'County', 'Street', 'Avenue', 'American',
+                'According', 'Reports', 'Authorities', 'Department', 'News', 'Report', 'York',
+                'Angeles', 'Francisco', 'Biden', 'Harris', 'Trump', 'White', 'House', 'National',
+                'University', 'College', 'School', 'High', 'Middle', 'Elementary', 'Institute',
+                'Center', 'City', 'State', 'Federal', 'Bureau', 'Investigation', 'FBI', 'DOJ',
+                'Court', 'Judge', 'Attorney', 'District', 'Mayor', 'Governor', 'President',
+                'Senator', 'Congressman', 'Congresswoman', 'Representative', 'Minister', 'Rabbi',
+                'Temple', 'Synagogue', 'Church', 'Mosque', 'Islamic', 'Christian', 'Muslim',
+                'Catholic', 'Protestant', 'Orthodox', 'Conservative', 'Reform', 'Israel', 'Palestine',
+                'Hamas', 'Gaza', 'Anti', 'Defamation', 'League', 'ADL', 'Council', 'Relations',
+                'Associated', 'Press', 'Reuters', 'Times', 'Post', 'Tribune', 'Daily', 'Weekly',
+                'Journal', 'Gazette', 'Chronicle', 'Herald', 'Bulletin', 'Register', 'Star',
+                'Local', 'Global', 'International', 'World', 'New', 'North', 'South', 'East', 'West',
+                'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Main', 'Broad', 'Park', 'River',
+                'Lake', 'Mountain', 'Hill', 'Valley', 'Forest', 'Beach', 'Coast', 'Island',
+                'America', 'Europe', 'Asia', 'Africa', 'Australia', 'Antarctica', 'Pacific',
+                'Atlantic', 'Indian', 'Arctic', 'Southern', 'Northern', 'Western', 'Eastern',
+                'Central', 'Middle', 'Near', 'Far', 'Upper', 'Lower', 'Inner', 'Outer',
+                'Chief', 'Officer', 'Deputy', 'Sergeant', 'Lieutenant', 'Captain', 'Major',
+                'General', 'Colonel', 'Commander', 'Admiral', 'Secretary', 'Director', 'Manager',
+                'President', 'Vice', 'Supervisor', 'Coordinator', 'Administrator', 'Executive',
+                'The', 'A', 'An', 'In', 'On', 'At', 'To', 'From', 'By', 'With', 'About',
+                'Against', 'Over', 'Under', 'Above', 'Below', 'Behind', 'Beside', 'Between',
+                'During', 'After', 'Before', 'Since', 'Until', 'While', 'Although', 'Because',
+                'If', 'Unless', 'Except', 'Or', 'Nor', 'But', 'And', 'Yet', 'So', 'For',
+                'As', 'Than', 'That', 'Which', 'Who', 'Whom', 'Whose', 'What', 'Whatever',
+                'Whoever', 'Whomever', 'This', 'These', 'Those', 'Some', 'Any', 'Many', 'Few',
+                'All', 'Both', 'Neither', 'Each', 'Every', 'Other', 'Another', 'Such', 'Same',
+                'Different', 'Next', 'Last', 'Past', 'Present', 'Future', 'Now', 'Then', 'Here',
+                'There', 'Where', 'When', 'Why', 'How', 'Not', 'No', 'Yes', 'True', 'False'
+            ].map(w => w.toLowerCase()));
+
             allData.forEach(incident => {
+                // Tracking Locations for the new feature
+                if (incident.location) {
+                    const loc = incident.location;
+                    if (!locationMap[loc]) locationMap[loc] = 0;
+                    locationMap[loc]++;
+                }
+
+                // Extracting Perps using stricter heuristics
                 const fullText = incident.title + ' ' + incident.description;
-                const namePattern = /\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b/g;
+                // Require exact capitalization: exactly one uppercase followed by lowecases
+                const namePattern = /\b([A-Z][a-z]{1,20})\s+([A-Z][a-z]{1,20})\b/g;
                 let match;
+                
                 while ((match = namePattern.exec(fullText)) !== null) {
                     const firstName = match[1];
                     const lastName = match[2];
                     const fullName = firstName + ' ' + lastName;
-                    const skipWords = ['Jewish', 'United', 'States', 'Police', 'County', 'Street', 'Avenue', 'American', 'According', 'Reports', 'Authorities', 'Department', 'News', 'Report', 'York', 'Angeles', 'Francisco', 'Biden', 'Harris'];
-                    if (!skipWords.includes(firstName) && !skipWords.includes(lastName) && fullName.length > 4) {
+                    
+                    if (!skipWords.has(firstName.toLowerCase()) && !skipWords.has(lastName.toLowerCase()) && fullName.length > 5) {
                         const textLower = fullText.toLowerCase();
                         const nameIndex = textLower.indexOf(fullName.toLowerCase());
-                        const contextWindow = textLower.substring(Math.max(0, nameIndex - 100), Math.min(textLower.length, nameIndex + 100));
-                        const actionWords = ['arrested', 'charged', 'accused', 'suspect', 'perpetrator', 'assaulted', 'attacked', 'threatened', 'vandalized', 'indicted', 'convicted', 'shooter', 'assailant'];
+                        const contextWindow = textLower.substring(Math.max(0, nameIndex - 120), Math.min(textLower.length, nameIndex + 120));
+                        
+                        // Action words indicating an offender
+                        const actionWords = ['arrested', 'charged', 'accused', 'suspect', 'perpetrator', 'assaulted', 'attacked', 'threatened', 'vandalized', 'indicted', 'convicted', 'shooter', 'assailant', 'identified as', 'pleaded guilty', 'sentenced'];
                         const isAction = actionWords.some(word => contextWindow.includes(word));
-                        if (isAction) {
+                        
+                        // Guard against reporters, victims, or officials
+                        const negativeWords = ['reporter', 'journalist', 'victim', 'rabbi', 'police', 'officer', 'mayor', 'governor', 'said', 'according to'];
+                        const isNegative = negativeWords.some(word => contextWindow.includes(word));
+
+                        if (isAction && !isNegative) {
                             if (!nameMap[fullName]) nameMap[fullName] = [];
                             if (!nameMap[fullName].find(x => x.id === incident.id)) nameMap[fullName].push(incident);
                         }
                     }
                 }
             });
-            const sorted = Object.entries(nameMap).filter(([name, incidents]) => incidents.length > 0).sort((a, b) => b[1].length - a[1].length);
-            if (sorted.length === 0) {
-                document.getElementById('perpList').innerHTML = '<div class="empty">No perpetrators found yet.</div>';
-                return;
-            }
-            document.getElementById('perpList').innerHTML = sorted.map(([name, incidents]) => `
-                <div class="card" data-name="${name.toLowerCase()}">
-                    <div class="title" style="color: #c0392b; font-size: 1.3rem;">${esc(name)}</div>
-                    <div class="meta">Cited in ${incidents.length} incident(s)</div>
-                    <div style="margin-top:1rem; background: #fafaf8; padding: 1rem; border-radius: 3px;">
-                        <strong style="display: block; margin-bottom: 0.75rem;">Related news articles:</strong>
-                        ${incidents.slice(0, 5).map(inc => `
-                            <div style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid #ddd;">
-                                <a href="${inc.url}" target="_blank">${esc(inc.title)}</a>
-                                <div style="font-size:0.85rem; color:#999;">${fmt(inc.date)} | ${esc(inc.location)} | ${esc(inc.source)}</div>
-                            </div>
-                        `).join('')}
+            
+            // Render Perps
+            const sortedPerps = Object.entries(nameMap).filter(([name, incidents]) => incidents.length > 0).sort((a, b) => b[1].length - a[1].length);
+            if (sortedPerps.length === 0) {
+                document.getElementById('perpList').innerHTML = '<div class="empty">No named perpetrators found in the current articles using natural language heuristics.</div>';
+            } else {
+                document.getElementById('perpList').innerHTML = sortedPerps.map(([name, incidents]) => `
+                    <div class="card" data-name="${name.toLowerCase()}">
+                        <div class="title" style="color: #c0392b; font-size: 1.2rem;">${esc(name)}</div>
+                        <div class="meta">Cited in ${incidents.length} incident(s)</div>
+                        <div style="margin-top:1rem; background: #fafaf8; padding: 1rem; border-radius: 3px;">
+                            ${incidents.slice(0, 3).map(inc => `
+                                <div style="margin-bottom:0.5rem; padding-bottom:0.5rem; border-bottom:1px solid #ddd;">
+                                    <a href="${inc.url}" target="_blank" style="font-size: 0.95rem;">${esc(inc.title)}</a>
+                                    <div style="font-size:0.8rem; color:#999;">${fmt(inc.date)} | ${esc(inc.location)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
+            }
+
+            // Render Locations
+            const sortedLocs = Object.entries(locationMap).sort((a, b) => b[1] - a[1]).slice(0, 15);
+            if (sortedLocs.length === 0) {
+                document.getElementById('locationList').innerHTML = '<div class="empty">No location data found.</div>';
+            } else {
+                document.getElementById('locationList').innerHTML = sortedLocs.map(([loc, count], index) => `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #eee;">
+                        <div>
+                            <span style="font-weight: 600; color: #555; margin-right: 0.5rem;">#${index + 1}</span>
+                            <span style="font-weight: 600; color: var(--primary);">${esc(loc)}</span>
+                        </div>
+                        <span style="background: rgba(26, 71, 42, 0.1); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">
+                            ${count} report${count !== 1 ? 's' : ''}
+                        </span>
+                    </div>
+                `).join('');
+            }
         }
 
         function filterPerps() {
@@ -393,37 +477,61 @@
 
         function getStatsByYear() {
             const stats = {'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0};
+            const locs = {};
             const thisYear = new Date().getFullYear();
             allData.forEach(i => {
-                if (new Date(i.date).getFullYear() === thisYear) categorizeIncident(i, stats);
+                if (new Date(i.date).getFullYear() === thisYear) {
+                    categorizeIncident(i, stats);
+                    if (i.location) locs[i.location] = (locs[i.location] || 0) + 1;
+                }
             });
+            const topLoc = Object.entries(locs).sort((a,b) => b[1]-a[1])[0];
             const total = Object.values(stats).reduce((a, b) => a + b);
             if (total === 0) return '<div class="empty">No incidents this year yet.</div>';
-            return `<h3>2026 (${total} total)</h3><div class="stat-grid">` + Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + '</div>';
+            return `<h3>2026 (${total} total)</h3><div class="stat-grid">` + 
+                Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + 
+                `<div class="stat-box" style="background:#f0f7f4;"><div class="stat-box-type" style="color:#2d6b47;">Top Location</div><div class="stat-box-number" style="font-size:1.5rem; margin-top:0.5rem;">${topLoc ? esc(topLoc[0]) : 'N/A'}</div><div class="stat-box-percent">${topLoc ? topLoc[1] + ' incidents' : ''}</div></div>` +
+                '</div>';
         }
 
         function getStatsByLastYear() {
             const stats = {'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0};
+            const locs = {};
             const lastYear = new Date().getFullYear() - 1;
             allData.forEach(i => {
-                if (new Date(i.date).getFullYear() === lastYear) categorizeIncident(i, stats);
+                if (new Date(i.date).getFullYear() === lastYear) {
+                    categorizeIncident(i, stats);
+                    if (i.location) locs[i.location] = (locs[i.location] || 0) + 1;
+                }
             });
+            const topLoc = Object.entries(locs).sort((a,b) => b[1]-a[1])[0];
             const total = Object.values(stats).reduce((a, b) => a + b);
             if (total === 0) return '<div class="empty">No incidents from last year.</div>';
-            return `<h3>2025 (${total} total)</h3><div class="stat-grid">` + Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + '</div>';
+            return `<h3>2025 (${total} total)</h3><div class="stat-grid">` + 
+                Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + 
+                `<div class="stat-box" style="background:#f0f7f4;"><div class="stat-box-type" style="color:#2d6b47;">Top Location</div><div class="stat-box-number" style="font-size:1.5rem; margin-top:0.5rem;">${topLoc ? esc(topLoc[0]) : 'N/A'}</div><div class="stat-box-percent">${topLoc ? topLoc[1] + ' incidents' : ''}</div></div>` +
+                '</div>';
         }
 
         function getStatsByMonth() {
             const now = new Date();
             const stats = {'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0};
+            const locs = {};
             allData.forEach(i => {
                 const d = new Date(i.date);
-                if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) categorizeIncident(i, stats);
+                if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+                    categorizeIncident(i, stats);
+                    if (i.location) locs[i.location] = (locs[i.location] || 0) + 1;
+                }
             });
+            const topLoc = Object.entries(locs).sort((a,b) => b[1]-a[1])[0];
             const total = Object.values(stats).reduce((a, b) => a + b);
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             if (total === 0) return `<div class="empty">No incidents this month.</div>`;
-            return `<h3>${monthNames[now.getMonth()]} 2026 (${total} total)</h3><div class="stat-grid">` + Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + '</div>';
+            return `<h3>${monthNames[now.getMonth()]} 2026 (${total} total)</h3><div class="stat-grid">` + 
+                Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + 
+                `<div class="stat-box" style="background:#f0f7f4;"><div class="stat-box-type" style="color:#2d6b47;">Top Location</div><div class="stat-box-number" style="font-size:1.5rem; margin-top:0.5rem;">${topLoc ? esc(topLoc[0]) : 'N/A'}</div><div class="stat-box-percent">${topLoc ? topLoc[1] + ' incidents' : ''}</div></div>` +
+                '</div>';
         }
 
         function getStatsByWeek() {
@@ -434,14 +542,22 @@
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekStart.getDate() + 6);
             const stats = {'Physical Assault': 0, 'Harassment': 0, 'Graffiti': 0, 'Threat': 0, 'Other': 0};
+            const locs = {};
             allData.forEach(i => {
                 const d = new Date(i.date);
                 d.setHours(0, 0, 0, 0);
-                if (d >= weekStart && d <= weekEnd) categorizeIncident(i, stats);
+                if (d >= weekStart && d <= weekEnd) {
+                    categorizeIncident(i, stats);
+                    if (i.location) locs[i.location] = (locs[i.location] || 0) + 1;
+                }
             });
+            const topLoc = Object.entries(locs).sort((a,b) => b[1]-a[1])[0];
             const total = Object.values(stats).reduce((a, b) => a + b);
             if (total === 0) return '<div class="empty">No incidents this week.</div>';
-            return `<h3>This Week (${fmt(weekStart)} - ${fmt(weekEnd)}) (${total} total)</h3><div class="stat-grid">` + Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + '</div>';
+            return `<h3>This Week (${fmt(weekStart)} - ${fmt(weekEnd)}) (${total} total)</h3><div class="stat-grid">` + 
+                Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + 
+                `<div class="stat-box" style="background:#f0f7f4;"><div class="stat-box-type" style="color:#2d6b47;">Top Location</div><div class="stat-box-number" style="font-size:1.5rem; margin-top:0.5rem;">${topLoc ? esc(topLoc[0]) : 'N/A'}</div><div class="stat-box-percent">${topLoc ? topLoc[1] + ' incidents' : ''}</div></div>` +
+                '</div>';
         }
 
         function categorizeIncident(i, statsObj) {
