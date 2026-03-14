@@ -12,48 +12,75 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// News API key from environment
-const NEWS_API_KEY = process.env.NEWS_API_KEY;
+// API keys from environment
+const NEWS_API_KEY_STRING = process.env.NEWS_API_KEY;
+const GNEWS_API_KEY_STRING = process.env.GNEWS_API_KEY;
 
 // In-memory storage (in production, use a database like MongoDB or PostgreSQL)
 let incidents = [];
 
-// Helper function to extract incident data from article
-function parseIncident(article) {
+
+function extractSharedData(article) {
+  let location = 'United States'; 
+  const usStates = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
+  
+  const textToSearch = (article.title + ' ' + (article.description || article.content || '')).replace(/[^\w\s]/g, ' ');
+  for (const state of usStates) {
+    const stateRegex = new RegExp(`\\b${state}\\b`, 'i');
+    if (stateRegex.test(textToSearch)) {
+      location = state;
+      const match = textToSearch.match(new RegExp(`([A-Z][a-z]+)[\\s,]+${state}`, 'i'));
+      if (match && match[1] && !['In', 'The', 'At', 'Near', 'To', 'From'].includes(match[1])) {
+          location = `${match[1]}, ${state}`;
+      }
+      break;
+    }
+  }
+
+  const titleLower = article.title.toLowerCase();
+  const descLower = ((article.description || '') + ' ' + (article.content || '')).toLowerCase();
+  let category = 'Harassment';
+  if (titleLower.includes('assault') || descLower.includes('assault') || titleLower.includes('attack') || titleLower.includes('punched')) {
+      category = 'Physical Assault';
+  } else if (titleLower.includes('vandal') || descLower.includes('vandal') || titleLower.includes('swastika') || titleLower.includes('graffiti')) {
+      category = 'Vandalism';
+  } else if (titleLower.includes('threat') || descLower.includes('threat') || titleLower.includes('bomb')) {
+      category = 'Threat';
+  }
+
+  return { location, category };
+}
+
+// Map NewsAPI structure
+function parseNewsApiIncident(article) {
+  const { location, category } = extractSharedData(article);
   return {
-    id: Date.now() + Math.random(),
-    title: article.title || 'No Title',
-    description: article.description || article.content || '',
+    id: Math.random().toString(36).substring(2, 15),
+    title: article.title,
+    description: article.description || article.content || 'No description available.',
+    date: article.publishedAt,
+    location: location,
+    source: article.source?.name || 'NewsAPI',
     url: article.url,
-    source: article.source?.name || 'Unknown',
-    date: new Date(article.publishedAt),
-    imageUrl: article.urlToImage,
-    category: 'Unconfirmed', // Can be manual or auto-categorized
-    location: extractLocation((article.title || '') + ' ' + (article.description || '')),
-    status: 'pending_review', // pending_review, verified, disputed
-    addedDate: new Date(),
+    category: category,
+    status: 'pending_review' 
   };
 }
 
-// Simple location extraction (can be enhanced with NLP)
-function extractLocation(text) {
-  const usStates = [
-    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
-    'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
-    'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
-    'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
-    'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
-    'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-    'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
-    'Wisconsin', 'Wyoming'
-  ];
-  
-  for (const state of usStates) {
-    if (text.toLowerCase().includes(state.toLowerCase())) {
-      return state;
-    }
-  }
-  return 'United States';
+// Map GNews structure
+function parseGnewsIncident(article) {
+  const { location, category } = extractSharedData(article);
+  return {
+    id: Math.random().toString(36).substring(2, 15),
+    title: article.title,
+    description: article.description || article.content || 'No description available.',
+    date: article.publishedAt,
+    location: location,
+    source: article.source?.name || 'GNews',
+    url: article.url,
+    category: category,
+    status: 'pending_review' 
+  };
 }
 
 // Routes
@@ -117,8 +144,11 @@ app.delete('/api/incidents/:id', (req, res) => {
 // Fetch from News API
 app.post('/api/fetch-news', async (req, res) => {
   try {
-    if (!NEWS_API_KEY) {
-      return res.status(400).json({ error: 'NEWS_API_KEY not configured' });
+    const newsApiKeys = NEWS_API_KEY_STRING ? NEWS_API_KEY_STRING.split(',').map(k => k.trim()).filter(k => k) : [];
+    const gnewsApiKeys = GNEWS_API_KEY_STRING ? GNEWS_API_KEY_STRING.split(',').map(k => k.trim()).filter(k => k) : [];
+    
+    if (newsApiKeys.length === 0 && gnewsApiKeys.length === 0) {
+      return res.status(400).json({ error: 'No valid API keys found in NEWS_API_KEY or GNEWS_API_KEY' });
     }
     
     const searchQueries = [
@@ -128,46 +158,82 @@ app.post('/api/fetch-news', async (req, res) => {
     ];
     
     let newIncidents = [];
-    const timeframe = req.query.timeframe || 'month'; // 'month' or 'year'
+    const timeframe = req.query.timeframe || 'month'; // 'month' or 'year' or 'today'
     
-    // Calculate date for filtering
     const fromDate = new Date();
     if (timeframe === 'year') {
       fromDate.setFullYear(fromDate.getFullYear() - 1);
     } else if (timeframe === 'today') {
       fromDate.setDate(fromDate.getDate() - 1); // 24 hours ago
     } else {
-      fromDate.setDate(fromDate.getDate() - 28); // Safer than 1 full month to avoid 426 errors
+      fromDate.setDate(fromDate.getDate() - 28);
     }
     const fromDateString = fromDate.toISOString().split('T')[0];
     
     for (const query of searchQueries) {
-      try {
-        const response = await axios.get('https://newsapi.org/v2/everything', {
-          params: {
-            q: query,
-            from: fromDateString,
-            sortBy: 'publishedAt',
-            language: 'en',
-            apiKey: NEWS_API_KEY,
-            pageSize: 100,
-          },
-          timeout: 10000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0'
+      // 1. Fetch from GNews (Real-time, bypasses 24h delay)
+      if (gnewsApiKeys.length > 0) {
+        let gnewsSuccess = false;
+        let gKeyIdx = 0;
+        while (!gnewsSuccess && gKeyIdx < gnewsApiKeys.length) {
+          try {
+            const response = await axios.get('https://gnews.io/api/v4/search', {
+              params: {
+                q: query,
+                from: fromDateString + 'T00:00:00Z',
+                lang: 'en',
+                apikey: gnewsApiKeys[gKeyIdx],
+                max: 100, // GNews max
+              },
+              timeout: 10000,
+              headers: { 'User-Agent': 'Mozilla/5.0' }
+            });
+            if (response.data.articles) {
+              newIncidents.push(
+                ...response.data.articles
+                  .filter(article => article.title && article.title !== '[Removed]')
+                  .map(article => parseGnewsIncident(article))
+              );
+            }
+            gnewsSuccess = true;
+          } catch (e) {
+            console.error(`GNews query "${query}" failed on key ${gKeyIdx}:`, e.response?.data?.message || e.message);
+            gKeyIdx++;
           }
-        });
-      
-      if (response.data.articles) {
-        newIncidents.push(
-          ...response.data.articles
-            .filter(article => article.title && article.title !== '[Removed]' && article.url !== 'https://removed.com')
-            .map(article => parseIncident(article))
-        );
+        }
       }
-      } catch (queryError) {
-        console.error(`Error with query "${query}":`, queryError.response?.data?.message || queryError.message);
-        continue;
+
+      // 2. Fetch from NewsAPI (Extensive catalog)
+      if (newsApiKeys.length > 0) {
+        let newsApiSuccess = false;
+        let nKeyIdx = 0;
+        while (!newsApiSuccess && nKeyIdx < newsApiKeys.length) {
+          try {
+            const response = await axios.get('https://newsapi.org/v2/everything', {
+              params: {
+                q: query,
+                from: fromDateString,
+                sortBy: 'publishedAt',
+                language: 'en',
+                apiKey: newsApiKeys[nKeyIdx],
+                pageSize: 100,
+              },
+              timeout: 10000,
+              headers: { 'User-Agent': 'Mozilla/5.0' }
+            });
+            if (response.data.articles) {
+              newIncidents.push(
+                ...response.data.articles
+                  .filter(article => article.title && article.title !== '[Removed]' && article.url !== 'https://removed.com')
+                  .map(article => parseNewsApiIncident(article))
+              );
+            }
+            newsApiSuccess = true;
+          } catch (e) {
+            console.error(`NewsAPI query "${query}" failed on key ${nKeyIdx}:`, e.response?.data?.message || e.message);
+            nKeyIdx++;
+          }
+        }
       }
     }
     
