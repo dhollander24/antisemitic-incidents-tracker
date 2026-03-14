@@ -5,7 +5,7 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(cors());
@@ -122,10 +122,9 @@ app.post('/api/fetch-news', async (req, res) => {
     }
     
     const searchQueries = [
-      'antisemitic attack United States',
-      'antisemitism incident USA',
+      'antisemitic OR antisemitism',
       'hate crime Jewish',
-      'swastika incident America',
+      'swastika incident',
     ];
     
     let newIncidents = [];
@@ -161,7 +160,9 @@ app.post('/api/fetch-news', async (req, res) => {
       
       if (response.data.articles) {
         newIncidents.push(
-          ...response.data.articles.map(article => parseIncident(article))
+          ...response.data.articles
+            .filter(article => article.title && article.title !== '[Removed]' && article.url !== 'https://removed.com')
+            .map(article => parseIncident(article))
         );
       }
       } catch (queryError) {
