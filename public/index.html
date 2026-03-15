@@ -846,7 +846,7 @@
             const topLoc = Object.entries(locs).sort((a,b) => b[1]-a[1])[0];
             const total = Object.values(stats).reduce((a, b) => a + b);
             if (total === 0) return '<div class="empty">No incidents this year yet.</div>';
-            return `<h3>2026 (${total} total)</h3><div class="stat-grid">` + 
+            return `<h3>${thisYear} (${total} total)</h3><div class="stat-grid">` + 
                 Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + 
                 `<div class="stat-box" style="background:#f0f7f4;"><div class="stat-box-type" style="color:#2d6b47;">Top Location</div><div class="stat-box-number" style="font-size:1.5rem; margin-top:0.5rem;">${topLoc ? esc(topLoc[0]) : 'N/A'}</div><div class="stat-box-percent">${topLoc ? topLoc[1] + ' incidents' : ''}</div></div>` +
                 '</div>';
@@ -865,7 +865,7 @@
             const topLoc = Object.entries(locs).sort((a,b) => b[1]-a[1])[0];
             const total = Object.values(stats).reduce((a, b) => a + b);
             if (total === 0) return '<div class="empty">No incidents from last year.</div>';
-            return `<h3>2025 (${total} total)</h3><div class="stat-grid">` + 
+            return `<h3>${lastYear} (${total} total)</h3><div class="stat-grid">` + 
                 Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + 
                 `<div class="stat-box" style="background:#f0f7f4;"><div class="stat-box-type" style="color:#2d6b47;">Top Location</div><div class="stat-box-number" style="font-size:1.5rem; margin-top:0.5rem;">${topLoc ? esc(topLoc[0]) : 'N/A'}</div><div class="stat-box-percent">${topLoc ? topLoc[1] + ' incidents' : ''}</div></div>` +
                 '</div>';
@@ -886,7 +886,7 @@
             const total = Object.values(stats).reduce((a, b) => a + b);
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             if (total === 0) return `<div class="empty">No incidents this month.</div>`;
-            return `<h3>${monthNames[now.getMonth()]} 2026 (${total} total)</h3><div class="stat-grid">` + 
+            return `<h3>${monthNames[now.getMonth()]} ${now.getFullYear()} (${total} total)</h3><div class="stat-grid">` + 
                 Object.entries(stats).map(([type, count]) => `<div class="stat-box"><div class="stat-box-type">${type}</div><div class="stat-box-number">${count}</div><div class="stat-box-percent">${((count/total)*100).toFixed(0)}%</div></div>`).join('') + 
                 `<div class="stat-box" style="background:#f0f7f4;"><div class="stat-box-type" style="color:#2d6b47;">Top Location</div><div class="stat-box-number" style="font-size:1.5rem; margin-top:0.5rem;">${topLoc ? esc(topLoc[0]) : 'N/A'}</div><div class="stat-box-percent">${topLoc ? topLoc[1] + ' incidents' : ''}</div></div>` +
                 '</div>';
