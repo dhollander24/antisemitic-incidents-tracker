@@ -161,8 +161,13 @@ app.post('/api/fetch-news', async (req, res) => {
     const timeframe = req.query.timeframe || 'month'; // 'month' or 'year' or 'today'
     
     const fromDate = new Date();
+    let toDateString = null;
     if (timeframe === 'year') {
-      fromDate.setFullYear(fromDate.getFullYear() - 1);
+      const lastYear = fromDate.getFullYear() - 1;
+      fromDate.setFullYear(lastYear, 0, 1);
+      const toDate = new Date();
+      toDate.setFullYear(lastYear, 11, 31);
+      toDateString = toDate.toISOString().split('T')[0];
     } else if (timeframe === 'today') {
       fromDate.setDate(fromDate.getDate() - 1); // 24 hours ago
     } else {
@@ -177,14 +182,17 @@ app.post('/api/fetch-news', async (req, res) => {
         let gKeyIdx = 0;
         while (!gnewsSuccess && gKeyIdx < gnewsApiKeys.length) {
           try {
+            const params = {
+              q: query,
+              from: fromDateString + 'T00:00:00Z',
+              lang: 'en',
+              apikey: gnewsApiKeys[gKeyIdx],
+              max: 100, // GNews max
+            };
+            if (toDateString) params.to = toDateString + 'T23:59:59Z';
+
             const response = await axios.get('https://gnews.io/api/v4/search', {
-              params: {
-                q: query,
-                from: fromDateString + 'T00:00:00Z',
-                lang: 'en',
-                apikey: gnewsApiKeys[gKeyIdx],
-                max: 100, // GNews max
-              },
+              params: params,
               timeout: 10000,
               headers: { 'User-Agent': 'Mozilla/5.0' }
             });
@@ -209,15 +217,18 @@ app.post('/api/fetch-news', async (req, res) => {
         let nKeyIdx = 0;
         while (!newsApiSuccess && nKeyIdx < newsApiKeys.length) {
           try {
+            const params = {
+              q: query,
+              from: fromDateString,
+              sortBy: 'publishedAt',
+              language: 'en',
+              apiKey: newsApiKeys[nKeyIdx],
+              pageSize: 100,
+            };
+            if (toDateString) params.to = toDateString;
+
             const response = await axios.get('https://newsapi.org/v2/everything', {
-              params: {
-                q: query,
-                from: fromDateString,
-                sortBy: 'publishedAt',
-                language: 'en',
-                apiKey: newsApiKeys[nKeyIdx],
-                pageSize: 100,
-              },
+              params: params,
               timeout: 10000,
               headers: { 'User-Agent': 'Mozilla/5.0' }
             });
